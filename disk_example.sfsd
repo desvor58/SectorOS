@@ -1,0 +1,14 @@
+{
+	"disk": [
+		{
+			"type": "F",
+			"name": "test.txt",
+			"data": "test.txt"
+		},
+		{
+			"type": "E",
+			"name": "hello",
+			"data": "hello.bin"
+		}
+	]
+}
