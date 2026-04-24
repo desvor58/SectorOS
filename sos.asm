@@ -28,66 +28,52 @@ start:
 	mov dl, 0x80
 	mov si, DAP_struct
 	int 0x13
+	jc err_de
 
 shell_loop:
+	; clear the cmd
 	mov di, cmd
     mov cx, 32
     xor al, al
     rep stosb
-    
+
+    ; read to cmd
 	mov di, cmd
 	mov dl , 0x0D
 	int 0x22
 	call printNL
-	
-.search_program:
-    mov bx, 0x7E00          ; Начало таблицы секторов
-.next_entry:
-    cmp byte [bx], 0        ; Проверка на пустую запись
-    jz .cmp_err_fnf
-    
-    mov si, bx              ; SI -> имя в таблице (11 байт)
-    mov di, cmd             ; DI -> введенная команда
-    mov cx, 11              ; Сравниваем строго 11 байт
-.compare:
-    mov al, [si]
-    mov dl, [di]
-    cmp al, dl
-    jne .not_equal          ; Если символы разные — к следующей записи
-    
-    inc si
-    inc di
-    loop .compare
-    
-    jmp .end_cmp            ; Если 11 символов совпали
 
-.not_equal:
-    add bx, 0x10            ; Переходим к следующей записи (16 байт)
-    cmp bx, 0x8000          ; Ограничение (конец прочитанного сектора)
-    jl .next_entry
+	mov ax, 0x07C0
+	mov es, ax
+	mov si, 0x200
+	mov bx, 11
 
-.cmp_err_fnf:
-	mov si, err_fnf
-	mov bx, 0x0F
-	int 0x21
-    jmp shell_loop
+.search_loop:
+	cmp byte [es:si], 0
+	jz err_fnf
 
-.end_cmp:
+	mov di, cmd
 	push si
-	push bx
-	push ax
-		mov si, hello
-		mov bx, 0x0F
-		int 0x21
-	pop ax
-	pop bx
+	call strcmp
 	pop si
+	jnc .program_find
 
-	mov ax, [bx + 12]
+	add si, 0x10
+	jmp .search_loop
+
+.program_find:
+	mov ax, [es:si + 12]
 	mov [DAP_struct.sec_ptr], ax
-	mov ax, [bx + 14]
+	mov [DAP_struct.sec_ptr + 2], 0
+	mov [DAP_struct.sec_ptr + 4], 0
+	mov [DAP_struct.sec_ptr + 6], 0
+	mov ax, [es:si + 14]
 	add ax, 511
 	shr ax, 9
+	
+	xor bx, bx
+	mov es, bx
+	
 	mov [DAP_struct.sec_num], ax
 	mov word [DAP_struct.buf_ptr], 0
 	mov word [DAP_struct.buf_ptr + 2], 0x1000
@@ -96,6 +82,7 @@ shell_loop:
 	mov dl, 0x80
 	mov si, DAP_struct
 	int 0x13
+	jc err_de
 
 	mov ax, 0x1000
 	mov ds, ax
@@ -105,6 +92,21 @@ shell_loop:
 	mov ds, ax
 	mov es, ax
 
+	jmp shell_loop
+
+err_fnf:
+	mov si, err_fnf_text
+	mov bx, 0x0F
+	int 0x21
+    jmp shell_loop
+
+err_de:
+    mov si, err_de_text
+    mov bx, 0x0F
+    int 0x21
+    mov al, ah
+    mov ah, 0x0E
+   	int 0x10
 	jmp shell_loop
 
 
@@ -175,10 +177,11 @@ printNL:
 	int 0x10
 	ret
 
-; es:si - 1 str
-; ds:di - 2 str
-; bx    - max size
-; ret   - set cf if err
+; es:si    - 1 str
+; ds:di    - 2 str
+; bx       - max size
+; ret      - set cf if err
+; destruct - cx, di, si, al
 strcmp:
 	xor cx, cx
 .ccmp:
@@ -206,10 +209,12 @@ strcmp:
 	clc
 	ret
 
-hello          db "Hello, from SectorOS",  10, 13, 0
-err_fnf        db "ERROR: File not found", 10, 13, 0
+hello          db "All good",  10, 13, 0
+err_fnf_text   db "ERR: File not found", 10, 13, 0
+err_de_text    db "ERR: Disk error", 10, 13, 0
 cmd   times 32 db 0
 
+align 4
 DAP_struct:
 	.DAP_size db 0x10
 	.res      db 0x00

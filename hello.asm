@@ -7,4 +7,4 @@ start:
 	int 0x21
 	retf
 
-msg db "Hello, world, from program", 10, 13, 0
+msg db "Hello world, from program", 10, 13, 0
