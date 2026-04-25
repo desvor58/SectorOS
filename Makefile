@@ -1,21 +1,24 @@
-PROGRAMS := hello
+PROGRAMS := hello  \
+			help   \
+			dir    
+
+BINS := $(addsuffix .bin, $(PROGRAMS))
 
 ifeq ($(OS),Windows_NT)
     CLEAN_CMD := del /q
 else
-    CLEAN_CMD := rm -rf
+    CLEAN_CMD := rm -f
 endif
 
+all: disk
 
-all: sos $(PROGRAMS) disk
-
-sos:
+sos.bin: sos.asm
 	nasm -f bin -o sos.bin sos.asm
 
-$(PROGRAMS): programs/$(PROGRAMS).asm
-	nasm -f bin -o $@.bin $<
+$(BINS): %.bin: programs/%.asm
+	nasm -f bin -o $@ $<
 
-disk:
+disk: sos.bin $(BINS)
 	python3 mkfs.py disk_example.sfsd disk.img
 
 run: all

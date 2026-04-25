@@ -9,6 +9,16 @@
 			"type": "E",
 			"name": "hello",
 			"data": "hello.bin"
+		},
+		{
+			"type": "E",
+			"name": "help",
+			"data": "help.bin"
+		},
+		{
+			"type": "E",
+			"name": "dir",
+			"data": "dir.bin"
 		}
 	]
 }

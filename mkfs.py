@@ -34,7 +34,7 @@ def build_disk(config_path, output_name):
             file_path = item['data']
             if not os.path.exists(file_path):
                 print(f"Error: file {file_path} not found")
-                continue
+                exit(1)
 
             with open(file_path, 'rb') as f:
                 data = f.read()
