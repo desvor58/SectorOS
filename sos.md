@@ -4,21 +4,21 @@ SOS works **full at boot sector**
 
 # Interupts
 ## 0x20 CLEAR
-> clearing display
+> clearing display  \
 > **destruct** - ax, bx, cx, dx
 
 ## 0x21 PRINT
-> print string from ds:si to \0.
-> **ds** - segment of string.
-> **si** - pointer to string.
-> **bx** - color and page.
+> print string from ds:si to \0. \
+> **ds** - segment of string.  \
+> **si** - pointer to string.  \
+> **bx** - color and page.  \
 > **destruct** - ax, si
 
 ## 0x22 READ
-> read string from user to *end char* and write to buffer with \0 to the end.
-> **es** - segment of buffer.
-> **di** - pointer to buffer.
-> **dl** - end char.
+> read string from user to *end char* and write to buffer with \0 to the end.  \
+> **es** - segment of buffer.  \
+> **di** - pointer to buffer.  \
+> **dl** - end char.  \
 > **destruct** - ax, cx, di
 
 # File system

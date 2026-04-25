@@ -31,6 +31,9 @@ start:
 	jc err_de
 
 shell_loop:
+	xor ax, ax
+	mov es, ax
+
 	; clear the cmd
 	mov di, cmd
     mov cx, 32
@@ -39,7 +42,7 @@ shell_loop:
 
     ; read to cmd
 	mov di, cmd
-	mov dl , 0x0D
+	mov dl, 0x0D
 	int 0x22
 	call printNL
 
@@ -62,6 +65,9 @@ shell_loop:
 	jmp .search_loop
 
 .program_find:
+	cmp byte [es:si + 11], 'E'
+	jnz err_wft
+
 	mov ax, [es:si + 12]
 	mov [DAP_struct.sec_ptr], ax
 	mov word [DAP_struct.sec_ptr + 2], 0
@@ -96,17 +102,18 @@ shell_loop:
 
 err_fnf:
 	mov si, err_fnf_text
-	mov bx, 0x0F
-	int 0x21
-    jmp shell_loop
+	jmp general_err
 
 err_de:
     mov si, err_de_text
-    mov bx, 0x0F
+	jmp general_err
+
+err_wft:
+    mov si, err_wft_text
+
+general_err:
+    mov bx, 0x04
     int 0x21
-    mov al, ah
-    mov ah, 0x0E
-   	int 0x10
 	jmp shell_loop
 
 
@@ -125,11 +132,17 @@ int_clear:
 
 ; 0x21
 int_print:
-	mov ah, 0x0E
+	mov cx, 1
 .put:
 	lodsb
 	test al, al
 	jz .done
+	cmp al, 0x20
+	jl .ctrlC
+	mov ah, 0x09
+	int 0x10
+.ctrlC:
+	mov ah, 0x0E
 	int 0x10
 	jmp .put
 .done:
@@ -153,7 +166,7 @@ int_read:
 	jmp .read
 
 .done:
-	mov word [es:di], 0
+	mov byte [es:di], 0
 	iret
 
 .backspace:
@@ -210,8 +223,9 @@ strcmp:
 	ret
 
 hello          db "All good",  10, 13, 0
-err_fnf_text   db "ERR: File not found", 10, 13, 0
-err_de_text    db "ERR: Disk error", 10, 13, 0
+err_fnf_text   db "E FNF", 10, 13, 0
+err_de_text    db "E DE", 10, 13, 0
+err_wft_text   db "E WFT", 10, 13, 0
 cmd   times 32 db 0
 
 align 4
