@@ -64,9 +64,9 @@ shell_loop:
 .program_find:
 	mov ax, [es:si + 12]
 	mov [DAP_struct.sec_ptr], ax
-	mov [DAP_struct.sec_ptr + 2], 0
-	mov [DAP_struct.sec_ptr + 4], 0
-	mov [DAP_struct.sec_ptr + 6], 0
+	mov word [DAP_struct.sec_ptr + 2], 0
+	mov word [DAP_struct.sec_ptr + 4], 0
+	mov word [DAP_struct.sec_ptr + 6], 0
 	mov ax, [es:si + 14]
 	add ax, 511
 	shr ax, 9
@@ -153,7 +153,7 @@ int_read:
 	jmp .read
 
 .done:
-	mov [es:di], 0
+	mov word [es:di], 0
 	iret
 
 .backspace:
