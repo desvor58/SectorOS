@@ -18,7 +18,6 @@ SOS works **full at boot sector**
 > read string from user to *end char* and write to buffer with \0 to the end.  \
 > **es** - segment of buffer.  \
 > **di** - pointer to buffer.  \
-> **dl** - end char.  \
 > **destruct** - ax, cx, di
 
 # File system
@@ -26,12 +25,26 @@ SOS works **full at boot sector**
 1 sector - SectorOS
 
 struct {
-	char     file_name[11];	   // null-terminater name
-	uint8_t  file_type;        // E - executble, F - text file, D - directory
+	char     file_name[11];	   // null-terminated name
+	uint8_t  file_type;        // E - executable, F - text file, D - directory
 	uint16_t data_start_sec;   // number of file sector
 	uint16_t data_size; 	   // size of text
 } tbl[];
 
 files data...
+```
+
+# Memory map
+```
+0x0000:0x0000
+     ???
+0x0000:0x7C00
+   SectorOS
+0x1000:0x0000
+     PLS      (executable programs loads hear)
+0x2000:0x0000
+	  ^
+	  | SectorOS/PLS stack
+0x2000:0xFFFE
 ```
 

@@ -10,20 +10,23 @@ start:
 		mov ss, ax
 		mov sp, 0xFFFE
 
-		mov word [0x20 * 4], int_clear
-		mov word [0x20 * 4 + 2], cs
 		mov word [0x21 * 4], int_print
 		mov word [0x21 * 4 + 2], cs
 		mov word [0x22 * 4], int_read
 		mov word [0x22 * 4 + 2], cs
 	sti
 
-	int 0x20
+	mov ax, 0x0600
+	mov bh, 0x0F
+	xor cx, cx
+	mov dx, 0x184F
+	int 0x10
+	mov ah, 0x02
+	xor bh, bh
+	xor dx, dx
+	int 0x10
 
-	mov si, hello
-	mov bx, 0x0F
-	int 0x21
-
+	; load file-decl sector
 	mov ah, 0x42
 	mov dl, 0x80
 	mov si, DAP_struct
@@ -34,15 +37,8 @@ shell_loop:
 	xor ax, ax
 	mov es, ax
 
-	; clear the cmd
-	mov di, cmd
-    mov cx, 32
-    xor al, al
-    rep stosb
-
     ; read to cmd
 	mov di, cmd
-	mov dl, 0x0D
 	int 0x22
 	call printNL
 
@@ -57,7 +53,7 @@ shell_loop:
 
 	mov di, cmd
 	push si
-	call strcmp
+		call strcmp
 	pop si
 	jnc .program_find
 
@@ -70,16 +66,10 @@ shell_loop:
 
 	mov ax, [es:si + 12]
 	mov [DAP_struct.sec_ptr], ax
-	mov word [DAP_struct.sec_ptr + 2], 0
-	mov word [DAP_struct.sec_ptr + 4], 0
-	mov word [DAP_struct.sec_ptr + 6], 0
 	mov ax, [es:si + 14]
-	add ax, 511
-	shr ax, 9
-	
-	xor bx, bx
-	mov es, bx
-	
+	add ax, 0x1FF
+	shr ax, 0x9
+
 	mov [DAP_struct.sec_num], ax
 	mov word [DAP_struct.buf_ptr], 0
 	mov word [DAP_struct.buf_ptr + 2], 0x1000
@@ -96,7 +86,6 @@ shell_loop:
 	call 0x1000:0x0000
 	xor ax, ax
 	mov ds, ax
-	mov es, ax
 
 	jmp shell_loop
 
@@ -116,19 +105,6 @@ general_err:
     int 0x21
 	jmp shell_loop
 
-
-;0x20
-int_clear:
-	mov ax, 0x0600
-	mov bh, 0x0F
-	xor cx, cx
-	mov dx, 0x184F
-	int 0x10
-	mov ah, 0x02
-	xor bh, bh
-	xor dx, dx
-	int 0x10
-	iret
 
 ; 0x21
 int_print:
@@ -155,7 +131,7 @@ int_read:
 .read:
 	xor ah, ah
 	int 0x16
-	cmp al, dl
+	cmp al, 0x0D
 	jz .done
 	cmp al, 0x08
 	jz .backspace
@@ -222,7 +198,6 @@ strcmp:
 	clc
 	ret
 
-hello          db "All good",  10, 13, 0
 err_fnf_text   db "E FNF", 10, 13, 0
 err_de_text    db "E DE", 10, 13, 0
 err_wft_text   db "E WFT", 10, 13, 0

@@ -2,7 +2,6 @@
 [ORG 0x0000]
 
 start:
-    int 0x20
 	mov si, help
 	mov bx, 0x0F
 	int 0x21
