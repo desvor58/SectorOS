@@ -3,7 +3,7 @@
 
 start:
     mov bx, 0x0F
-    mov si, 0x7E00
+    mov si, 0x0600
     xor ax, ax
     mov ds, ax
 
@@ -21,14 +21,6 @@ scan:
     push si
         int 0x21
     pop si
-
-    ; mov ah, 0x03
-    ; mov bh, 0
-    ; int 0x10
-
-    ; mov dl, 13
-    ; mov ah, 0x02
-    ; int 0x10
 
     mov al, 0x0A
     int 0x10

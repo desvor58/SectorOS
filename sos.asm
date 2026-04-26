@@ -6,7 +6,7 @@ start:
 		xor ax, ax
 		mov ds, ax
 		mov es, ax
-		mov ax, 0x2000
+		mov ax, 0x1000
 		mov ss, ax
 		mov sp, 0xFFFE
 
@@ -14,6 +14,8 @@ start:
 		mov word [0x21 * 4 + 2], cs
 		mov word [0x22 * 4], int_read
 		mov word [0x22 * 4 + 2], cs
+		mov word [0x23 * 4], int_get_file_text
+		mov word [0x23 * 4 + 2], cs
 	sti
 
 	mov ax, 0x0600
@@ -26,7 +28,7 @@ start:
 	xor dx, dx
 	int 0x10
 
-	; load file-decl sector
+	; load FHT
 	mov ah, 0x42
 	mov dl, 0x80
 	mov si, DAP_struct
@@ -40,50 +42,27 @@ shell_loop:
     ; read to cmd
 	mov di, cmd
 	int 0x22
-	call printNL
+	mov ah, 0x0E
+	mov al, 0x0A
+	int 0x10
+	mov al, 0x0D
+	int 0x10
 
-	mov ax, 0x07C0
+	mov si, cmd
+	mov ax, 0x2000
 	mov es, ax
-	mov si, 0x200
-	mov bx, 11
+	int 0x23
 
-.search_loop:
-	cmp byte [es:si], 0
+	cmp ah, 1
 	jz err_fnf
-
-	mov di, cmd
-	push si
-		call strcmp
-	pop si
-	jnc .program_find
-
-	add si, 0x10
-	jmp .search_loop
-
-.program_find:
-	cmp byte [es:si + 11], 'E'
+	cmp ah, 2
+	jz err_de
+	cmp al, 'E'
 	jnz err_wft
 
-	mov ax, [es:si + 12]
-	mov [DAP_struct.sec_ptr], ax
-	mov ax, [es:si + 14]
-	add ax, 0x1FF
-	shr ax, 0x9
-
-	mov [DAP_struct.sec_num], ax
-	mov word [DAP_struct.buf_ptr], 0
-	mov word [DAP_struct.buf_ptr + 2], 0x1000
-
-	mov ah, 0x42
-	mov dl, 0x80
-	mov si, DAP_struct
-	int 0x13
-	jc err_de
-
-	mov ax, 0x1000
+	mov ax, 0x2000
 	mov ds, ax
-	mov es, ax
-	call 0x1000:0x0000
+	call 0x2000:0x0000
 	xor ax, ax
 	mov ds, ax
 
@@ -158,13 +137,62 @@ int_read:
 	dec cx
 	jmp .read
 
-printNL:
-	mov ah, 0x0E
-	mov al, 0x0A
-	int 0x10
-	mov al, 0x0D
-	int 0x10
-	ret
+; 0x23
+int_get_file_text:
+	xor ax, ax
+	mov ds, ax
+	mov di, 0x0600
+	mov bx, 11
+
+.search_loop:
+	cmp byte [di], 0
+	jz .err_fnf
+	
+	push es
+		xor ax, ax
+		mov es, ax
+
+		push si
+		push di
+			call strcmp
+		pop di
+		pop si
+	pop es
+	jnc .program_find
+
+	add di, 0x10
+	jmp .search_loop
+
+.program_find:
+	mov bl, byte [di + 11]
+
+	mov ax, [di + 12]
+	mov [DAP_struct.sec_ptr], ax
+	mov ax, [di + 14]
+	add ax, 0x1FF
+	shr ax, 0x09
+	mov [DAP_struct.sec_num], ax
+
+	mov word [DAP_struct.buf_ptr], 0
+	mov word [DAP_struct.buf_ptr + 2], es
+
+	mov ah, 0x42
+	mov dl, 0x80
+	mov si, DAP_struct
+	int 0x13
+	jc .err_de
+
+	mov al, bl
+	xor ah, ah
+	iret
+
+.err_fnf:
+	mov ah, 1
+	iret
+
+.err_de:
+	mov ah, 2
+	iret
 
 ; es:si    - 1 str
 ; ds:di    - 2 str
@@ -208,8 +236,8 @@ DAP_struct:
 	.DAP_size db 0x10
 	.res      db 0x00
 	.sec_num  dw 1
-	.buf_ptr  dw 0x0200
-			  dw 0x07C0
+	.buf_ptr  dw 0x0600
+			  dw 0x0000
 	.sec_ptr  dq 1
 
 times 510 - ($ - $$) db 0
