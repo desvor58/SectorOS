@@ -40,7 +40,7 @@ shell_loop:
 	mov es, ax
 
     ; read to cmd
-	mov di, cmd
+	mov di, 0x500
 	int 0x22
 	mov ah, 0x0E
 	mov al, 0x0A
@@ -48,7 +48,20 @@ shell_loop:
 	mov al, 0x0D
 	int 0x10
 
-	mov si, cmd
+	xor ax, ax
+	mov ds, ax
+	mov es, ax
+	mov si, 0x500
+	mov di, 0x580
+.slice_loop:
+	lodsb
+	cmp al, ' '
+	jbe .slice_done
+	stosb
+	jmp .slice_loop
+
+.slice_done:
+	mov si, 0x580
 	mov ax, 0x2000
 	mov es, ax
 	int 0x23
@@ -229,7 +242,6 @@ strcmp:
 err_fnf_text   db "E FNF", 10, 13, 0
 err_de_text    db "E DE", 10, 13, 0
 err_wft_text   db "E WFT", 10, 13, 0
-cmd   times 32 db 0
 
 align 4
 DAP_struct:
