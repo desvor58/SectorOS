@@ -19,6 +19,11 @@
 			"type": "E",
 			"name": "dir",
 			"data": "dir.bin"
+		},
+		{
+			"type": "E",
+			"name": "memd",
+			"data": "memd.bin"
 		}
 	]
 }

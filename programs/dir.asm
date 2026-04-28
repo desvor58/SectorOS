@@ -3,7 +3,7 @@
 
 start:
     mov bx, 0x0F
-    mov si, 0x0600
+    mov si, 0x0800
     xor ax, ax
     mov ds, ax
 

@@ -19,24 +19,54 @@ SOS works **full at boot sector**
 > **destruct** - ax, cx, di
 
 ## 0x23 GET FILE TEXT
-> write file text to segment \
-> si - name of file
-> es - segment to writing  \
+```
+in:       es:si - name of file
+          dx - segment to writing
+out:      ah - err code
+               0 - ok
+       	       1 - fnf
+       	       2 - de
+          al - file type
+destruct: ds=0, bx, si, di
+```
+
+## 0x24 SET FILE TEXT
+> write text to file \
+> **ds:si** - name of file
+> **es** - segment to writing  \
 > ret - ah - err code(0 - ok, 1 - fnf, 2 - de), al - file type  \
 > **destruct** - ds, ax, bx, si, di
 
+## 0x25 GET FILE HEADER
+```
+int 0x25
+in:       es:si - name of file
+out:      ah - err code
+               0 - ok
+               1 - fnf
+          0x0000:di - file type
+destruct: ds=0, ax, cx, bx, si
+```
 # File system
 ```
-1 sector - SectorOS
+sector 0:
+  SectorOS
 
-struct FileHeader {
-	char     file_name[11];	   // null-terminated name
-	uint8_t  file_type;        // E - executable, F - text file, D - directory
-	uint16_t data_start_sec;   // number of file sector
-	uint16_t data_size; 	   // size of text
-};
+sector 1:
+  struct SFSDiskData {
+    u16 last_free_sector;
+  };
 
-files data...
+sector 2:
+  struct FileHeader {
+    char     file_name[11];	   // null-terminated name
+    uint8_t  file_type;        // E - executable, F - text file, D - directory
+    uint16_t data_start_sec;   // number of file sector
+    uint16_t data_size; 	     // size of text
+  } FileHeadersTable[];
+
+sector 3-...:
+  files data...
 ```
 
 # Memory map
@@ -48,12 +78,14 @@ files data...
     0x00500
  SectorOS data
     0x00600
+     SFSDD        SFS Disk Data
+    0x00800
       FHT         File Headers Table
     0x07C00
-	SectorOS
+	 SectorOS
     0x10000
-	  ^
-	  | SectorOS/PLS stack
+       ^
+       | SectorOS/PLS stack
     0x20000
       PLS         executable programs loads hear
     0x30000

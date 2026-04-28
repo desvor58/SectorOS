@@ -1,6 +1,7 @@
 PROGRAMS := hello  \
 			help   \
-			dir    
+			dir    \
+			memd   \
 
 BINS := $(addsuffix .bin, $(PROGRAMS))
 
