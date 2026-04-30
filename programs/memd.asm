@@ -23,15 +23,15 @@ start:
 print_ax_hex:
     push bp
     mov bp, sp
-    pusha              ; Сохраняем все регистры
+    pusha
 
-    sub sp, 6          ; Выделяем место под строку (4 знака + \0 + выравнивание)
-    mov di, sp         ; DI указывает на начало временного буфера
+    sub sp, 6
+    mov di, sp
 
-    mov cx, 4          ; 4 цифры
-    mov bx, ax         ; Копируем число в BX, чтобы работать с ним
+    mov cx, 4
+    mov bx, ax
 .loop:
-    rol bx, 4          ; Берем старшую тетраду
+    rol bx, 4
     mov al, bl
     and al, 0Fh
     add al, '0'
@@ -39,18 +39,33 @@ print_ax_hex:
     jbe .store
     add al, 7
 .store:
-    mov [di], al       ; Кладем символ в буфер
+    mov [di], al
     inc di
     loop .loop
 
-    mov byte [di], 0   ; Добавляем нуль-терминатор (\0) для INT 0x21
+    mov byte [di], 0
 
-    ; Подготовка к вызову INT 0x21
-    mov si, sp         ; DS:SI — указатель на нашу строку в стеке
-    mov bx, 0x0F         ; BX - цвет и страница (по умолчанию 0)
-    int 0x21           ; Вывод строки
-
-    add sp, 6          ; Очищаем буфер в стеке
+    mov si, sp
+    mov bx, 0x0F
+    call print
+    add sp, 6
     popa
     pop bp
+    ret
+
+print:
+    mov cx, 1
+.put:
+    lodsb
+    test al, al
+    jz .done
+    cmp al, 0x20
+    jl .ctrlC
+    mov ah, 0x09
+    int 0x10
+.ctrlC:
+    mov ah, 0x0E
+    int 0x10
+    jmp .put
+.done:
     ret

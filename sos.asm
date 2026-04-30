@@ -12,7 +12,7 @@ start:
         
         mov di, 0x21 * 4
         mov si, int_table
-        mov cx, 5
+        mov cx, 3
     .set_ivt:
         lodsw
         stosw
@@ -55,16 +55,44 @@ shell_loop:
 
     ; read to cmd
     mov di, 0x500
-    int 0x22
+    xor cx, cx
+
+.read_char:
+    xor ah, ah
+    int 0x16
+    cmp al, 0x0D
+    jz .done
+    cmp al, 0x08
+    jz .backspace
+    stosb
+    mov ah, 0x0E
+    int 0x10
+    inc cx
+    jmp .read_char
+
+.backspace:
+    test cx, cx
+    jz .read_char
+    mov ah, 0x0E
+    int 0x10
+    mov al, ' '
+    int 0x10
+    mov al, 0x08
+    int 0x10
+    dec di
+    dec cx
+
+    jmp .read_char
+
+.done:
+    mov byte [di], 0
+
     mov ah, 0x0E
     mov al, 0x0A
     int 0x10
     mov al, 0x0D
     int 0x10
 
-    xor ax, ax
-    mov ds, ax
-    mov es, ax
     mov si, 0x500
     mov di, 0x580
 .slice_loop:
@@ -79,7 +107,7 @@ shell_loop:
     stosb
     mov si, 0x580
     mov dx, 0x2000
-    int 0x23
+    int 0x21
 
     cmp ah, 1
     jz err_fnf
@@ -97,75 +125,30 @@ shell_loop:
     jmp shell_loop
 
 err_fnf:
-    mov si, err_fnf_text
+    mov ax, 0x0946  ; 0x46 - F
     jmp general_err
 
 err_de:
-    mov si, err_de_text
+    mov ax, 0x0944  ; 0x44 - D
     jmp general_err
 
 err_wft:
-    mov si, err_wft_text
+    mov ax, 0x0957  ; 0x57 - W
 
 general_err:
+    mov cx, 1
     mov bx, 0x04
-    int 0x21
+    int 0x10
+    mov ah, 0x0E
+    int 0x10
+    mov al, 0x0A
+    int 0x10
+    mov al, 0x0D
+    int 0x10
     jmp shell_loop
 
 
-; 0x21
-int_print:
-    mov cx, 1
-.put:
-    lodsb
-    test al, al
-    jz .done
-    cmp al, 0x20
-    jl .ctrlC
-    mov ah, 0x09
-    int 0x10
-.ctrlC:
-    mov ah, 0x0E
-    int 0x10
-    jmp .put
-.done:
-    iret
-
-; 0x22
-int_read:
-    xor cx, cx
-
-.read:
-    xor ah, ah
-    int 0x16
-    cmp al, 0x0D
-    jz .done
-    cmp al, 0x08
-    jz .backspace
-    stosb
-    mov ah, 0x0E
-    int 0x10
-    inc cx
-    jmp .read
-
-.done:
-    mov byte [es:di], 0
-    iret
-
-.backspace:
-    test cx, cx
-    jz .read
-    mov ah, 0x0E
-    int 0x10
-    mov al, ' '
-    int 0x10
-    mov al, 0x08
-    int 0x10
-    dec di
-    dec cx
-    jmp .read
-
-; int 0x23
+; int 0x21
 ; in:       es:si - name of file
 ;           dx - segment to writing
 ; out:      ah - err code
@@ -175,7 +158,7 @@ int_read:
 ;           al - file type
 ; destruct: ds, ax, bx, si, di
 int_get_file_text:
-    int 0x25
+    int 0x23
     test ah, ah
     jnz .err
 
@@ -206,7 +189,7 @@ int_get_file_text:
 .err:
     iret
 
-; int 0x24
+; int 0x22
 ; in:       es:si - name of file
 ;           dx - segment for writing
 ;           cx - size of text in bytes
@@ -217,7 +200,7 @@ int_get_file_text:
 ;           al - file type
 ; destruct: ds, ax, bx, si, di
 int_set_file_text:
-    int 0x25
+    int 0x23
     test ah, ah
     jnz .err
 
@@ -271,7 +254,7 @@ int_set_file_text:
 .err:
     iret
 
-; int 0x25
+; int 0x23
 ; in:       es:si - name of file
 ; out:      ah - err code
 ;                0 - ok
@@ -338,10 +321,6 @@ strcmp:
     clc
     ret
 
-err_fnf_text   db "F", 10, 13, 0
-err_de_text    db "D", 10, 13, 0
-err_wft_text   db "W", 10, 13, 0
-
 align 4
 DAP_struct:
     .DAP_size db 0x10
@@ -351,9 +330,7 @@ DAP_struct:
               dw 0x0000
     .sec_ptr  dq 2
     
-int_table dw int_print
-          dw int_read
-          dw int_get_file_text
+int_table dw int_get_file_text
           dw int_set_file_text
           dw int_get_file_header
 
