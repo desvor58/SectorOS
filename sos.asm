@@ -37,7 +37,7 @@ start:
     mov si, DAP_struct
     int 0x13
     jc err_de
-    
+
     mov word [DAP_struct.sec_ptr], 1
     mov word [DAP_struct.buf_ptr], 0x0600
 
@@ -47,7 +47,6 @@ start:
     mov si, DAP_struct
     int 0x13
     jc err_de
-
 
 shell_loop:
     xor ax, ax
@@ -104,7 +103,8 @@ shell_loop:
 
 .slice_done:
     xor al, al
-    stosb
+    mov cx, 11
+    rep stosb
     mov si, 0x580
     mov dx, 0x2000
     int 0x21
@@ -149,7 +149,7 @@ general_err:
 
 
 ; int 0x21
-; in:       es:si - name of file
+; in:       ds:si - name of file
 ;           dx - segment to writing
 ; out:      ah - err code
 ;                0 - ok
@@ -190,7 +190,7 @@ int_get_file_text:
     iret
 
 ; int 0x22
-; in:       es:si - name of file
+; in:       ds:si - name of file
 ;           dx - segment for writing
 ;           cx - size of text in bytes
 ; out:      ah - err code
@@ -198,7 +198,7 @@ int_get_file_text:
 ;                1 - fnf
 ;                2 - de
 ;           al - file type
-; destruct: ds, ax, bx, si, di
+; destruct: es, ax, bx, si, di
 int_set_file_text:
     int 0x23
     test ah, ah
@@ -255,28 +255,28 @@ int_set_file_text:
     iret
 
 ; int 0x23
-; in:       es:si - name of file
+; in:       ds:si - name of file
 ; out:      ah - err code
 ;                0 - ok
 ;                1 - fnf
 ;           0x0000:di - file type
-; destruct: ds, ax, bx, si, di
+; destruct: es, ax, bx, si, di
 int_get_file_header:
     xor ax, ax
-    mov ds, ax
+    mov es, ax
     mov di, 0x0800
-    mov bx, 11
 
 .search_loop:
-    cmp byte [di], 0
+    cmp byte [es:di], 0
     jz .err_fnf
 
     push si
     push di
-        call strcmp
+        mov cx, 11
+        repe cmpsb
     pop di
     pop si
-    jnc .search_done
+    jz .search_done
 
     add di, 0x10
     jmp .search_loop
@@ -289,37 +289,6 @@ int_get_file_header:
     mov ah, 1
     iret
 
-; es:si    - 1 str
-; ds:di    - 2 str
-; bx       - max size
-; ret      - set cf if err
-; destruct - cx, di, si, al
-strcmp:
-    xor cx, cx
-.ccmp:
-    cmp cx, bx
-    jz .neq
-    
-    mov al, [es:si]
-    
-    cmp al, [di]
-    jnz .neq
-    
-    test al, al
-    jz .eq
-    
-    inc si
-    inc di
-    inc cx
-    jmp .ccmp
-    
-.neq:
-    stc
-    ret
-    
-.eq:
-    clc
-    ret
 
 align 4
 DAP_struct:
