@@ -2,10 +2,10 @@
 [ORG 0x0000]
 
 start:
-    mov ax, 0x3000
+    mov ax, 0x0000
     mov es, ax
 
-    mov si, 0x000
+    mov si, 0xA00
     mov cx, 0x100
 
 .lp:
