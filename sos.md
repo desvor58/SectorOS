@@ -60,6 +60,9 @@ sector 3-...:
   files data...
 ```
 
+## Directories
+if file_type == D, then data_start_sec its number of sector with directories FHT
+
 # Memory map
 ```
     0x00000

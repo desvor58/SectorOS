@@ -2,6 +2,17 @@
 	"disk": [
 		{
 			"type": "E",
+			"name": "hello",
+			"data": "hello.bin"
+		},
+		{
+			"type": "D",
+			"name": "testd",
+			"data": [
+			]
+		},
+		{
+			"type": "E",
 			"name": "shutdown",
 			"data": "shutdown.bin"
 		},
@@ -24,11 +35,6 @@
 			"type": "E",
 			"name": "cat",
 			"data": "cat.bin"
-		},
-		{
-			"type": "E",
-			"name": "hello",
-			"data": "hello.bin"
 		},
 		{
 			"type": "E",

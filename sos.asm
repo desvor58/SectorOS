@@ -21,15 +21,15 @@ start:
         loop .set_ivt
     sti
 
-    mov ax, 0x0600
-    mov bh, 0x0F
-    xor cx, cx
-    mov dx, 0x184F
-    int 0x10
-    mov ah, 0x02
-    xor bh, bh
-    xor dx, dx
-    int 0x10
+    ; mov ax, 0x0600
+    ; mov bh, 0x0F
+    ; xor cx, cx
+    ; mov dx, 0x184F
+    ; int 0x10
+    ; mov ah, 0x02
+    ; xor bh, bh
+    ; xor dx, dx
+    ; int 0x10
 
     ; load FHT
     mov ah, 0x42
@@ -111,8 +111,7 @@ shell_loop:
 
     cmp ah, 1
     jz err_fnf
-    cmp ah, 2
-    jz err_de
+    ja err_de
 
     mov ax, 0x2000
     mov ds, ax
@@ -143,8 +142,8 @@ general_err:
 ;           dx - segment to writing
 ; out:      ah - err code
 ;                0 - ok
-;        	       1 - fnf
-;        	       2 - de
+;        	     1 - fnf
+;        	     2 - de
 ;           al - file type
 ;           bx - file size in bytes
 ; destruct: es=0, ds=0, si, di
@@ -152,9 +151,6 @@ int_get_file_text:
     int 0x23
     test ah, ah
     jnz .err
-
-    xor ax, ax
-    mov ds, ax
 
     mov bl, byte [di + 11]
 
@@ -198,9 +194,6 @@ int_set_file_text:
     int 0x23
     test ah, ah
     jnz .err
-
-    xor ax, ax
-    mov ds, ax
 
     mov ax, cx
     add ax, 0x1FF
@@ -257,29 +250,57 @@ int_set_file_text:
 ; out:      ah - err code
 ;                0 - ok
 ;                1 - fnf
+;                2 - de
 ;           es:di - file type
-; destruct: es, ax, bx, si, di
+; destruct: es=0, ds=0, ax, bx, si, di
 int_get_file_header:
     xor ax, ax
     mov es, ax
-    mov di, 0x0800
+    mov di, 0x6C0
 
-.search_loop:
-    cmp byte [es:di], 0
-    jz .err_fnf
-
-    push si
     push di
+    .get_dir_name:
+        lodsb
+        cmp al, '/'
+        jz .dir_name_done
+        stosb
+        jmp .get_dir_name
+    .dir_name_done:
         mov cx, 11
-        repe cmpsb
-    pop di
+        xor al, al
+        rep stosb
+    mov ax, si
+    pop si  ; si - 0x6C0 - dirname
+    push ax
+
+    push ds
+    xor ax, ax
+    mov ds, ax
+    mov di, 0x800
+    cmp byte [si], 0
+    jz .get_fileFH
+
+    call search_FH
+    jc .err_fnf
+
+    mov si, DAP_struct
+    mov word [si + 4], 0xA00
+    mov word [si + 6], 0
+    mov word [si + 2], 1
+    mov ax, [di + 12]
+    mov [si + 8], ax
+    mov ah, 0x42
+    mov dl, 0x80
+    int 0x13
+    jc .err_de
+    mov di, 0xA00
+
+.get_fileFH:
+    pop ds
     pop si
-    jz .search_done
 
-    add di, 0x10
-    jmp .search_loop
-
-.search_done:
+    call search_FH
+    jc .err_fnf
     xor ah, ah
     iret
     
@@ -287,8 +308,36 @@ int_get_file_header:
     mov ah, 1
     iret
 
+.err_de:
+    pop ax
+    pop ax
+    mov ah, 2
+    iret
 
-align 4
+; es:di - FHT
+; ds:si - name
+search_FH:
+    cmp byte [es:di], 0
+    jz .fnf
+
+    push si
+    push di
+        mov cx, 11
+        repe cmpsb
+    pop di
+    pop si
+    jz .done
+
+    add di, 0x10
+    jmp search_FH
+.done:
+    clc
+    ret
+
+.fnf:
+    stc
+    ret
+
 DAP_struct:
     .DAP_size db 0x10
     .res      db 0x00
