@@ -1,0 +1,8 @@
+[BITS 16]
+[ORG 0x0000]
+
+reboot:
+    mov ax, 0x40
+    mov ds, ax
+    mov word [0x72], 0x1234
+    jmp 0xFFFF:0x0000

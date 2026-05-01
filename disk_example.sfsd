@@ -1,14 +1,14 @@
 {
 	"disk": [
 		{
-			"type": "F",
-			"name": "test.txt",
-			"data": "test.txt"
+			"type": "E",
+			"name": "shutdown",
+			"data": "shutdown.bin"
 		},
 		{
 			"type": "E",
-			"name": "hello",
-			"data": "hello.bin"
+			"name": "reboot",
+			"data": "reboot.bin"
 		},
 		{
 			"type": "E",
@@ -22,8 +22,23 @@
 		},
 		{
 			"type": "E",
+			"name": "cat",
+			"data": "cat.bin"
+		},
+		{
+			"type": "E",
+			"name": "hello",
+			"data": "hello.bin"
+		},
+		{
+			"type": "E",
 			"name": "memd",
 			"data": "memd.bin"
+		},
+		{
+			"type": "F",
+			"name": "test.txt",
+			"data": "test.txt"
 		}
 	]
 }

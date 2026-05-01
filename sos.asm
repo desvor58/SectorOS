@@ -113,8 +113,6 @@ shell_loop:
     jz err_fnf
     cmp ah, 2
     jz err_de
-    cmp al, 'E'
-    jnz err_wft
 
     mov ax, 0x2000
     mov ds, ax
@@ -130,20 +128,12 @@ err_fnf:
 
 err_de:
     mov ax, 0x0944  ; 0x44 - D
-    jmp general_err
-
-err_wft:
-    mov ax, 0x0957  ; 0x57 - W
 
 general_err:
     mov cx, 1
     mov bx, 0x04
     int 0x10
     mov ah, 0x0E
-    int 0x10
-    mov al, 0x0A
-    int 0x10
-    mov al, 0x0D
     int 0x10
     jmp shell_loop
 
@@ -153,14 +143,18 @@ general_err:
 ;           dx - segment to writing
 ; out:      ah - err code
 ;                0 - ok
-;                1 - fnf
-;                2 - de
+;        	       1 - fnf
+;        	       2 - de
 ;           al - file type
-; destruct: ds, ax, bx, si, di
+;           bx - file size in bytes
+; destruct: es=0, ds=0, si, di
 int_get_file_text:
     int 0x23
     test ah, ah
     jnz .err
+
+    xor ax, ax
+    mov ds, ax
 
     mov bl, byte [di + 11]
 
@@ -181,6 +175,7 @@ int_get_file_text:
     jc .err_de
 
     mov al, bl
+    mov bx, [di + 14]
     xor ah, ah
     iret
 
@@ -198,11 +193,14 @@ int_get_file_text:
 ;                1 - fnf
 ;                2 - de
 ;           al - file type
-; destruct: es, ax, bx, si, di
+; destruct: es, ds, ax, bx, si, di
 int_set_file_text:
     int 0x23
     test ah, ah
     jnz .err
+
+    xor ax, ax
+    mov ds, ax
 
     mov ax, cx
     add ax, 0x1FF
@@ -259,7 +257,7 @@ int_set_file_text:
 ; out:      ah - err code
 ;                0 - ok
 ;                1 - fnf
-;           0x0000:di - file type
+;           es:di - file type
 ; destruct: es, ax, bx, si, di
 int_get_file_header:
     xor ax, ax

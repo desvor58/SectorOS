@@ -11,16 +11,33 @@ scan:
     cmp byte [si], 0
     jz done
 
-    mov ah, 0x0E
+    push si
+        mov ah, 0x0E
+        mov cx, 11
+    print_lp:
+        lodsb
+        test al, al
+        jz .its_zero
+        int 0x10
+        loop print_lp
+        jmp .done
+
+    .its_zero:
+        mov al, '.'
+        int 0x10
+        loop print_lp
+    .done:
+    pop si
+
     mov al, [si + 11]
     int 0x10
 
-    mov al, 0x20
+    mov al, '.'
+    int 0x10
     int 0x10
 
-    push si
-        call print
-    pop si
+    mov ax, [si + 14]
+    call print_ax_dec
 
     mov al, 0x0A
     int 0x10
@@ -46,4 +63,22 @@ print:
     int 0x10
     jmp .put
 .done:
+    ret
+
+print_ax_dec:
+    mov bx, 10
+    xor cx, cx
+.gc:
+    xor dx, dx
+    div bx
+    push dx
+    inc cx
+    test ax, ax
+    jnz .gc
+.put:
+    pop ax
+    add al, '0'
+    mov ah, 0x0E
+    int 0x10
+    loop .put
     ret

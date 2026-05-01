@@ -1,8 +1,8 @@
 # SectorOperationSystem
-SOS - its an experimental OS, writen at nasm.
+SOS - its an experimental OS, written at NASM.
 SOS works **full at boot sector**
 
-# Interupts
+# Interrupts
 ## 0x21 GET FILE TEXT
 ```
 in:       ds:si - name of file
@@ -12,7 +12,8 @@ out:      ah - err code
        	       1 - fnf
        	       2 - de
           al - file type
-destruct: es=0, bx, si, di
+          bx - file size in bytes
+destruct: es=0, ds=0, si, di
 ```
 
 ## 0x22 SET FILE TEXT
@@ -25,7 +26,7 @@ out:      ah - err code
                1 - fnf
                2 - de
           al - file type
-destruct: es=0, ax, bx, si, di
+destruct: es=0, ds=0, ax, bx, si, di
 ```
 
 ## 0x23 GET FILE HEADER
@@ -34,7 +35,7 @@ in:       ds:si - name of file
 out:      ah - err code
                0 - ok
                1 - fnf
-          0x0000:di - file type
+          es:di - file type
 destruct: es=0, ax, cx, bx, si
 ```
 # File system

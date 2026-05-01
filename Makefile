@@ -1,7 +1,10 @@
-PROGRAMS := hello  \
-			help   \
-			dir    \
-			memd   \
+PROGRAMS := hello     \
+			help      \
+			dir       \
+			memd      \
+			cat       \
+			shutdown  \
+			reboot    
 
 BINS := $(addsuffix .bin, $(PROGRAMS))
 

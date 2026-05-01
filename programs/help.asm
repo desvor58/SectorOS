@@ -7,11 +7,12 @@ start:
 	call print
 	retf
 
-help db "                                    SectorOS", 10, 13
-     db "                                 Made by Desvor", 10, 13
+help db "shutdown - shuting down the pc", 10, 13
+     db "reboot - rebooting the pc", 10, 13
      db "help - show this menu", 10, 13
      db "hello - gets hello from SectorOS", 10, 13
      db "dir - show files at current directory", 10, 13
+     db "cat <file> - prints <file> text", 10, 13
      db 0
 
 print:
