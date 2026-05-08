@@ -2,9 +2,11 @@ PROGRAMS := hello     \
 			help      \
 			dir       \
 			memd      \
+			rdsd      \
 			cat       \
 			shutdown  \
-			reboot    
+			reboot    \
+			touch	  \
 
 BINS := $(addsuffix .bin, $(PROGRAMS))
 

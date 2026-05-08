@@ -27,6 +27,11 @@
 		},
 		{
 			"type": "E",
+			"name": "touch",
+			"data": "touch.bin"
+		},
+		{
+			"type": "E",
 			"name": "hello",
 			"data": "hello.bin"
 		},
@@ -34,6 +39,11 @@
 			"type": "E",
 			"name": "memd",
 			"data": "memd.bin"
+		},
+		{
+			"type": "E",
+			"name": "rdsd",
+			"data": "rdsd.bin"
 		},
 		{
 			"type": "F",

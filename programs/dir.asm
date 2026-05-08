@@ -7,6 +7,8 @@ start:
     xor ax, ax
     mov ds, ax
 
+    xor dx, dx
+
 scan:
     cmp byte [si], 0
     jz done
@@ -44,8 +46,21 @@ scan:
     mov al, 0x0D
     int 0x10
     add si, 0x10
+    inc dx
     jmp scan
+
 done:
+    mov ax, dx
+    call print_ax_dec
+    mov ah, 0x0E
+    mov al, '/'
+    int 0x10
+    mov ax, 32
+    call print_ax_dec
+    mov al, 0x0A
+    int 0x10
+    mov al, 0x0D
+    int 0x10
 	retf
     
 print:
@@ -66,6 +81,7 @@ print:
     ret
 
 print_ax_dec:
+    push dx
     mov bx, 10
     xor cx, cx
 .gc:
@@ -81,4 +97,5 @@ print_ax_dec:
     mov ah, 0x0E
     int 0x10
     loop .put
+    pop dx
     ret

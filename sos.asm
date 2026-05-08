@@ -21,6 +21,13 @@ start:
         loop .set_ivt
     sti
 
+    ; mov ax, 0003h
+    ; int 10h
+
+    ; mov ax, 1111h
+    ; mov bl, 0
+    ; int 10h
+
     mov ax, 0x0600
     mov bh, 0x0F
     xor cx, cx
@@ -80,14 +87,12 @@ shell_loop:
     int 0x10
     dec di
     dec cx
-
     jmp .read_char
 
 .done:
     mov byte [di], 0
 
-    mov ah, 0x0E
-    mov al, 0x0A
+    mov ax, 0x0E0A
     int 0x10
     mov al, 0x0D
     int 0x10
@@ -111,8 +116,9 @@ shell_loop:
 
     cmp ah, 1
     jz err_fnf
-    cmp ah, 2
-    jz err_de
+    ja err_de
+    cmp al, 'E'
+    jnz err_wft
 
     mov ax, 0x2000
     mov ds, ax
@@ -128,12 +134,20 @@ err_fnf:
 
 err_de:
     mov ax, 0x0944  ; 0x44 - D
+    jmp general_err
+
+err_wft:
+    mov ax, 0x0957  ; 0x57 - W
 
 general_err:
     mov cx, 1
     mov bx, 0x04
     int 0x10
     mov ah, 0x0E
+    int 0x10
+    mov al, 0x0A
+    int 0x10
+    mov al, 0x0D
     int 0x10
     jmp shell_loop
 
