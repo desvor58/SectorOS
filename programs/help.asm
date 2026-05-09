@@ -13,6 +13,7 @@ help db "shutdown - shuting down the pc", 10, 13
      db "hello - gets hello from SectorOS", 10, 13
      db "dir - show files at current directory", 10, 13
      db "touch <file> [<type>] - creates file with <type> (E, F, or special)", 10, 13
+     db "wrt <file> [<text>] - write <text> to file", 10, 13
      db "cat <file> - prints <file> text", 10, 13
      db "rdsd <sec> - prints disk <sec> data", 10, 13
      db 0
