@@ -207,30 +207,40 @@ int_get_file_text:
 ;                1 - fnf
 ;                2 - de
 ;           al - file type
-; destruct: es, ds, ax, bx, si, di
+; destruct: es=0, ds=0, ax, cx, bx, si, di
 int_set_file_text:
-    int 0x23
+    push cx
+        int 0x23
+    pop cx
     test ah, ah
     jnz .err
 
     xor ax, ax
     mov ds, ax
 
-    mov ax, cx
-    add ax, 0x1FF
-    shr ax, 9
-
     mov bx, [di + 14]
     add bx, 0x1FF
     shr bx, 9
 
-    cmp ax, bx
+    test bx, bx
+    jnz .bx_not_null
+    inc bx
+.bx_not_null:
+
+    mov [di + 14], cx
+
+    add cx, 0x1FF
+    shr cx, 9
+
+    cmp cx, bx
     ja .need_alloc
+    mov bx, cx
     jmp .write
 
 .need_alloc:
     push dx
     push bx
+        mov [di + 14], bx
         mov cx, [0x600]
         mov [di + 12], cx
         add [0x600], bx
@@ -239,6 +249,12 @@ int_set_file_text:
         mov cx, 0x0002
         mov dx, 0x0080
         mov bx, 0x0600
+        int 0x13
+
+        mov ax, 0x0201
+        mov cx, 0x0003
+        mov dx, 0x0080
+        mov bx, 0x0800
         int 0x13
     pop bx
     pop dx
@@ -252,7 +268,7 @@ int_set_file_text:
     mov word [DAP_struct.buf_ptr], 0
     mov word [DAP_struct.buf_ptr + 2], dx
     
-    mov ah, 0x43
+    mov ax, 0x4300
     mov dl, 0x80
     mov si, DAP_struct
     int 0x13
@@ -271,8 +287,8 @@ int_set_file_text:
 ; out:      ah - err code
 ;                0 - ok
 ;                1 - fnf
-;           es:di - file type
-; destruct: es, ax, bx, si, di
+;           es:di - file struct
+; destruct: es, ax, bx, cx, si, di
 int_get_file_header:
     xor ax, ax
     mov es, ax

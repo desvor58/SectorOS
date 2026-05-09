@@ -46,8 +46,8 @@ type_cpy:
     test al, al
     jz skip_type_cpy
     mov [type], al
-skip_type_cpy:
 
+skip_type_cpy:
     mov bx, 0x0F
     mov si, 0x0800
     xor ax, ax
@@ -98,6 +98,8 @@ cpy_file_name:
         mov [si], ax
         inc word [es:0x600]
 
+        ; add si, 2
+        ; mov word [si], 1
 
         mov bx, 0x600
         mov ah, 0x03
@@ -135,9 +137,6 @@ cpy_file_name_done:
     mov dl, 0x80
     int 0x13
     jc err_de
-
-
-
     retf
 
 

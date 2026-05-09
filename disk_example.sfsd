@@ -1,5 +1,6 @@
 {
-	"disk": [
+	"size": "10K",
+	"data": [
 		{
 			"type": "E",
 			"name": "shutdown",
@@ -24,6 +25,11 @@
 			"type": "E",
 			"name": "cat",
 			"data": "cat.bin"
+		},
+		{
+			"type": "E",
+			"name": "wrt",
+			"data": "wrt.bin"
 		},
 		{
 			"type": "E",

@@ -4,11 +4,17 @@ import sys
 import os
 
 SECTOR_SIZE = 512
-# Формат заголовка файла: 11 байт имя, 1 байт тип, 2 байта старт, 2 байта размер
 ENTRY_FORMAT = "<11scHH" 
 ENTRY_SIZE = struct.calcsize(ENTRY_FORMAT)
-# Формат SFSDiskData: u16 last_free_sector
 DISK_DATA_FORMAT = "<H"
+
+def parse_size(size_str):
+    """Преобразует строку типа '5K' или '1M' в байты."""
+    units = {"K": 1024, "M": 1024*1024, "G": 1024*1024*1024}
+    unit = size_str[-1].upper()
+    if unit in units:
+        return int(size_str[:-1]) * units[unit]
+    return int(size_str)
 
 def build_disk(config_path, output_name):
     if not os.path.exists(config_path):
@@ -17,6 +23,9 @@ def build_disk(config_path, output_name):
 
     with open(config_path, 'r') as f:
         config = json.load(f)
+
+    # Определяем итоговый размер диска
+    total_size_bytes = parse_size(config.get('size', '0'))
 
     with open(output_name, 'wb') as disk:
         # 1. Сектор 0: Записываем бут-код (SectorOS)
@@ -29,28 +38,26 @@ def build_disk(config_path, output_name):
             disk.write(b'\x00' * SECTOR_SIZE)
 
         # 2. Резервируем Сектор 1 (SFSDiskData) и Сектор 2 (FileHeadersTable)
-        # Просто заполняем их нулями, чтобы переместить указатель на Сектор 3
         disk.write(b'\x00' * (SECTOR_SIZE * 2))
 
         # 3. Записываем данные файлов (начиная с сектора 3)
         current_sector = 3
         entries = []
 
-        for item in config.get('disk', []):
+        # Изменено: теперь берем данные из ключа 'data' вместо 'disk'
+        for item in config.get('data', []):
             file_path = item['data']
             if not os.path.exists(file_path):
                 print(f"Error: file {file_path} not found")
-                exit(1)
+                sys.exit(1)
 
             with open(file_path, 'rb') as f:
-                data = f.read()
-                data_size = len(data)
+                content = f.read()
+                data_size = len(content)
 
-                # Переходим к началу нужного сектора и пишем данные
                 disk.seek(current_sector * SECTOR_SIZE)
-                disk.write(data)
+                disk.write(content)
 
-                # Формируем запись для таблицы заголовков
                 name_bytes = item['name'].encode('ascii')[:10] + b'\x00'
                 entry = struct.pack(
                     ENTRY_FORMAT,
@@ -61,10 +68,9 @@ def build_disk(config_path, output_name):
                 )
                 entries.append(entry)
 
-                # Вычисляем следующий свободный сектор
                 current_sector += (data_size + SECTOR_SIZE - 1) // SECTOR_SIZE
 
-        # 4. Заполняем Сектор 1: SFSDiskData (last_free_sector)
+        # 4. Заполняем Сектор 1: SFSDiskData
         disk.seek(1 * SECTOR_SIZE)
         disk.write(struct.pack(DISK_DATA_FORMAT, current_sector))
 
@@ -73,11 +79,14 @@ def build_disk(config_path, output_name):
         for entry in entries:
             disk.write(entry)
         
-        # Маркер конца таблицы (нулевая структура), если влезет в сектор
         if (len(entries) + 1) * ENTRY_SIZE <= SECTOR_SIZE:
             disk.write(b'\x00' * ENTRY_SIZE)
 
-    print(f"Created '{output_name}'")
+        # 6. Устанавливаем фиксированный размер диска, если он указан
+        if total_size_bytes > 0:
+            disk.truncate(total_size_bytes)
+
+    print(f"Created '{output_name}' ({config.get('size', 'auto')})")
     print(f"Files: {len(entries)}")
     print(f"Last free sector recorded: {current_sector}")
 
