@@ -7,7 +7,8 @@ PROGRAMS := hello     \
 			shutdown  \
 			reboot    \
 			touch	  \
-			wrt	  \
+			wrt	      \
+			del 	  
 
 BINS := $(addsuffix .bin, $(PROGRAMS))
 

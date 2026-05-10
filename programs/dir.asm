@@ -2,6 +2,10 @@
 [ORG 0x0000]
 
 start:
+    mov si, header
+    mov bx, 0x07
+    call print
+
     mov bx, 0x0F
     mov si, 0x0800
     xor ax, ax
@@ -38,7 +42,33 @@ scan:
     int 0x10
     int 0x10
 
-    mov ax, [si + 14]
+    push dx
+        mov ah, 0x03
+        xor bx, bx
+        int 0x10
+        push dx
+
+        mov ax, [si + 14]
+        call print_ax_dec
+
+        mov ah, 0x03
+        xor bx, bx
+        int 0x10
+        pop bx
+
+        sub dx, bx
+        mov cx, 5
+        sub cx, dx
+
+        mov ah, 0x0E
+        mov al, '.'
+        xor bx, bx
+    print_pts:
+        int 0x10
+        loop print_pts
+    pop dx
+
+    mov ax, [si + 12]
     call print_ax_dec
 
     mov al, 0x0A
@@ -99,3 +129,5 @@ print_ax_dec:
     loop .put
     pop dx
     ret
+
+header db "NAME.......T..SZ...SC", 13, 10, 0

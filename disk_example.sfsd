@@ -38,6 +38,11 @@
 		},
 		{
 			"type": "E",
+			"name": "del",
+			"data": "del.bin"
+		},
+		{
+			"type": "E",
 			"name": "hello",
 			"data": "hello.bin"
 		},

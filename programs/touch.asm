@@ -23,7 +23,6 @@ to_args_loop:
 
 args_done:
     mov di, file
-    xor cx, cx
 file_cpy:
     mov al, [es:si]
     test al, al
@@ -36,11 +35,23 @@ file_cpy:
     jmp file_cpy
 
 file_cpy_done:
+    push ds
+    push di
+    push si
+        mov si, file
+        int 0x23
+    pop si
+    pop di
+    pop ds
+    test ah, ah
+    jz err_fae
+
+skip_sp_loop:
     mov al, [es:si]
     cmp al, ' '
     jnz type_cpy
     inc si
-    jmp file_cpy_done
+    jmp skip_sp_loop
 
 type_cpy:
     test al, al
@@ -98,9 +109,6 @@ cpy_file_name:
         mov [si], ax
         inc word [es:0x600]
 
-        ; add si, 2
-        ; mov word [si], 1
-
         mov bx, 0x600
         mov ah, 0x03
         mov al, 0x01
@@ -140,6 +148,13 @@ cpy_file_name_done:
     retf
 
 
+err_fae:
+    pop ds
+    mov si, err_fae_text
+    mov bx, 0x04
+    call print
+    retf
+
 err_fnf:
     mov si, err_fnf_text
     mov bx, 0x04
@@ -171,6 +186,7 @@ print:
 
 file times 32 db 0
 type db 'F'
+err_fae_text db "File already exist", 10, 13, 0
 err_fnf_text db "File not found", 10, 13, 0
 err_de_text db "Disk error", 10, 13, 0
 

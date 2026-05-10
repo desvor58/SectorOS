@@ -21,13 +21,6 @@ start:
         loop .set_ivt
     sti
 
-    ; mov ax, 0003h
-    ; int 10h
-
-    ; mov ax, 1111h
-    ; mov bl, 0
-    ; int 10h
-
     mov ax, 0x0600
     mov bh, 0x0F
     xor cx, cx
@@ -245,13 +238,13 @@ int_set_file_text:
         mov [di + 12], cx
         add [0x600], bx
 
-        mov ax, 0x0201
+        mov ax, 0x0301
         mov cx, 0x0002
         mov dx, 0x0080
         mov bx, 0x0600
         int 0x13
 
-        mov ax, 0x0201
+        mov ax, 0x0301
         mov cx, 0x0003
         mov dx, 0x0080
         mov bx, 0x0800
