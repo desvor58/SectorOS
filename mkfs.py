@@ -24,12 +24,10 @@ def build_disk(config_path, output_name):
     with open(config_path, 'r') as f:
         config = json.load(f)
 
-    # Определяем итоговый размер диска
     total_size_bytes = parse_size(config.get('size', '0'))
 
     with open(output_name, 'wb') as disk:
-        # 1. Сектор 0: Записываем бут-код (SectorOS)
-        if os.path.exists('sos.bin'):
+        if os.path.exists(config.get('boot', 'boot.bin')):
             with open('sos.bin', 'rb') as boot_f:
                 boot_code = boot_f.read(SECTOR_SIZE)
                 disk.write(boot_code.ljust(SECTOR_SIZE, b'\x00'))
@@ -37,14 +35,11 @@ def build_disk(config_path, output_name):
             print("Warning: sos.bin not found, filling sector 0 with zeros")
             disk.write(b'\x00' * SECTOR_SIZE)
 
-        # 2. Резервируем Сектор 1 (SFSDiskData) и Сектор 2 (FileHeadersTable)
         disk.write(b'\x00' * (SECTOR_SIZE * 2))
 
-        # 3. Записываем данные файлов (начиная с сектора 3)
         current_sector = 3
         entries = []
 
-        # Изменено: теперь берем данные из ключа 'data' вместо 'disk'
         for item in config.get('data', []):
             file_path = item['data']
             if not os.path.exists(file_path):
@@ -70,11 +65,9 @@ def build_disk(config_path, output_name):
 
                 current_sector += (data_size + SECTOR_SIZE - 1) // SECTOR_SIZE
 
-        # 4. Заполняем Сектор 1: SFSDiskData
         disk.seek(1 * SECTOR_SIZE)
         disk.write(struct.pack(DISK_DATA_FORMAT, current_sector))
 
-        # 5. Заполняем Сектор 2: FileHeadersTable
         disk.seek(2 * SECTOR_SIZE)
         for entry in entries:
             disk.write(entry)
@@ -82,7 +75,6 @@ def build_disk(config_path, output_name):
         if (len(entries) + 1) * ENTRY_SIZE <= SECTOR_SIZE:
             disk.write(b'\x00' * ENTRY_SIZE)
 
-        # 6. Устанавливаем фиксированный размер диска, если он указан
         if total_size_bytes > 0:
             disk.truncate(total_size_bytes)
 

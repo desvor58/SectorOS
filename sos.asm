@@ -20,6 +20,7 @@ start:
         stosw
         loop .set_ivt
     sti
+    push dx
 
     mov ax, 0x0600
     mov bh, 0x0F
@@ -31,9 +32,10 @@ start:
     xor dx, dx
     int 0x10
 
+    pop dx
+
     ; load FHT
     mov ah, 0x42
-    mov dl, 0x80
     mov si, DAP_struct
     int 0x13
     jc err_de
@@ -43,16 +45,16 @@ start:
 
     ; load SFSDD
     mov ah, 0x42
-    mov dl, 0x80
     mov si, DAP_struct
     int 0x13
     jc err_de
+
+    mov [0x602], dl
 
 shell_loop:
     xor ax, ax
     mov es, ax
 
-    ; read to cmd
     mov di, 0x500
     xor cx, cx
 
@@ -103,6 +105,7 @@ shell_loop:
     xor al, al
     mov cx, 11
     rep stosb
+
     mov si, 0x580
     mov dx, 0x2000
     int 0x21
@@ -176,7 +179,7 @@ int_get_file_text:
     mov word [DAP_struct.buf_ptr + 2], dx
 
     mov ah, 0x42
-    mov dl, 0x80
+    mov dl, [0x602]
     mov si, DAP_struct
     int 0x13
     jc .err_de
@@ -262,7 +265,7 @@ int_set_file_text:
     mov word [DAP_struct.buf_ptr + 2], dx
     
     mov ax, 0x4300
-    mov dl, 0x80
+    mov dl, [0x602]
     mov si, DAP_struct
     int 0x13
     jc .err_de

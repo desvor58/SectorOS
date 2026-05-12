@@ -68,7 +68,6 @@ clear_last_file_header:
     stosb
     loop clear_last_file_header
 
-
     mov ax, 0x0301
     mov cx, 0x0003
     mov dx, 0x0080
