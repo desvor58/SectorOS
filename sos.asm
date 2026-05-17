@@ -52,9 +52,6 @@ start:
     mov [0x602], dl
 
 shell_loop:
-    xor ax, ax
-    mov es, ax
-
     mov di, 0x500
     xor cx, cx
 
@@ -118,9 +115,11 @@ shell_loop:
 
     mov ax, 0x2000
     mov ds, ax
+    mov es, ax
     call 0x2000:0x0000
     xor ax, ax
     mov ds, ax
+    mov es, ax
 
     jmp shell_loop
 
@@ -166,13 +165,12 @@ int_get_file_text:
     xor ax, ax
     mov ds, ax
 
-    mov bl, byte [di + 11]
-
     mov ax, [di + 12]
     mov [DAP_struct.sec_ptr], ax
     mov ax, [di + 14]
     add ax, 0x1FF
-    shr ax, 0x09
+    mov cl, 0x09
+    shr ax, cl
     mov [DAP_struct.sec_num], ax
 
     mov word [DAP_struct.buf_ptr], 0
@@ -184,7 +182,7 @@ int_get_file_text:
     int 0x13
     jc .err_de
 
-    mov al, bl
+    mov al, [di + 11]
     mov bx, [di + 14]
     xor ah, ah
     iret
@@ -216,7 +214,10 @@ int_set_file_text:
 
     mov bx, [di + 14]
     add bx, 0x1FF
-    shr bx, 9
+    push cx
+        mov cl, 9
+        shr bx, cl
+    pop cx
 
     test bx, bx
     jnz .bx_not_null
@@ -226,7 +227,8 @@ int_set_file_text:
     mov [di + 14], cx
 
     add cx, 0x1FF
-    shr cx, 9
+    mov cl, 9
+    shr cx, cl
 
     cmp cx, bx
     ja .need_alloc
