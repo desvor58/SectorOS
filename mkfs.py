@@ -6,10 +6,9 @@ import os
 SECTOR_SIZE = 512
 ENTRY_FORMAT = "<11scHH" 
 ENTRY_SIZE = struct.calcsize(ENTRY_FORMAT)
-DISK_DATA_FORMAT = "<H"
+DISK_DATA_FORMAT = "<HH11s"
 
 def parse_size(size_str):
-    """Преобразует строку типа '5K' или '1M' в байты."""
     units = {"K": 1024, "M": 1024*1024, "G": 1024*1024*1024}
     unit = size_str[-1].upper()
     if unit in units:
@@ -66,7 +65,7 @@ def build_disk(config_path, output_name):
                 current_sector += (data_size + SECTOR_SIZE - 1) // SECTOR_SIZE
 
         disk.seek(1 * SECTOR_SIZE)
-        disk.write(struct.pack(DISK_DATA_FORMAT, current_sector))
+        disk.write(struct.pack(DISK_DATA_FORMAT, current_sector, 0, config.get('start_prog', 'help').encode('ascii')))
 
         disk.seek(2 * SECTOR_SIZE)
         for entry in entries:

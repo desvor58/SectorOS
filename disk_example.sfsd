@@ -1,61 +1,66 @@
 {
-	"size": "10K",
 	"boot": "sos.bin",
+	"start_prog": "sterm",
 	"data": [
 		{
 			"type": "E",
+			"name": "sterm",
+			"data": "bin/sterm.bin"
+		},
+		{
+			"type": "E",
 			"name": "shutdown",
-			"data": "shutdown.bin"
+			"data": "bin/shutdown.bin"
 		},
 		{
 			"type": "E",
 			"name": "reboot",
-			"data": "reboot.bin"
+			"data": "bin/reboot.bin"
 		},
 		{
 			"type": "E",
 			"name": "help",
-			"data": "help.bin"
+			"data": "bin/help.bin"
 		},
 		{
 			"type": "E",
 			"name": "dir",
-			"data": "dir.bin"
+			"data": "bin/dir.bin"
 		},
 		{
 			"type": "E",
 			"name": "cat",
-			"data": "cat.bin"
+			"data": "bin/cat.bin"
 		},
 		{
 			"type": "E",
 			"name": "wrt",
-			"data": "wrt.bin"
+			"data": "bin/wrt.bin"
 		},
 		{
 			"type": "E",
 			"name": "touch",
-			"data": "touch.bin"
+			"data": "bin/touch.bin"
 		},
 		{
 			"type": "E",
 			"name": "del",
-			"data": "del.bin"
+			"data": "bin/del.bin"
 		},
 		{
 			"type": "E",
 			"name": "hello",
-			"data": "hello.bin"
+			"data": "bin/hello.bin"
 		},
 		{
 			"type": "E",
 			"name": "memd",
-			"data": "memd.bin"
+			"data": "bin/memd.bin"
 		},
 		{
 			"type": "E",
 			"name": "rdsd",
-			"data": "rdsd.bin"
+			"data": "bin/rdsd.bin"
 		},
 		{
 			"type": "F",

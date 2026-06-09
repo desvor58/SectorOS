@@ -39,7 +39,7 @@ file_cpy_done:
     rep stosb
 
     mov si, file
-    mov dx, 0x3000
+    mov dx, 0x4000
     push ds
         int 0x21
     pop ds
@@ -49,7 +49,7 @@ file_cpy_done:
 
     mov cx, bx
 
-    mov ax, 0x3000
+    mov ax, 0x4000
     mov es, ax
     mov si, 0
     mov ah, 0x0E

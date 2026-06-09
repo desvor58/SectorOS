@@ -51,59 +51,7 @@ start:
 
     mov [0x602], dl
 
-shell_loop:
-    mov di, 0x500
-    xor cx, cx
-
-.read_char:
-    xor ah, ah
-    int 0x16
-    cmp al, 0x0D
-    jz .done
-    cmp al, 0x08
-    jz .backspace
-    stosb
-    mov ah, 0x0E
-    int 0x10
-    inc cx
-    jmp .read_char
-
-.backspace:
-    test cx, cx
-    jz .read_char
-    mov ah, 0x0E
-    int 0x10
-    mov al, ' '
-    int 0x10
-    mov al, 0x08
-    int 0x10
-    dec di
-    dec cx
-    jmp .read_char
-
-.done:
-    mov byte [di], 0
-
-    mov ax, 0x0E0A
-    int 0x10
-    mov al, 0x0D
-    int 0x10
-
-    mov si, 0x500
-    mov di, 0x580
-.slice_loop:
-    lodsb
-    cmp al, ' '
-    jbe .slice_done
-    stosb
-    jmp .slice_loop
-
-.slice_done:
-    xor al, al
-    mov cx, 11
-    rep stosb
-
-    mov si, 0x580
+    mov si, 0x604
     mov dx, 0x2000
     int 0x21
 
@@ -117,11 +65,9 @@ shell_loop:
     mov ds, ax
     mov es, ax
     call 0x2000:0x0000
-    xor ax, ax
-    mov ds, ax
-    mov es, ax
-
-    jmp shell_loop
+    
+    mov ax, 0x0945  ; 0x45 - E
+    jmp general_err
 
 err_fnf:
     mov ax, 0x0946  ; 0x46 - F
@@ -144,7 +90,8 @@ general_err:
     int 0x10
     mov al, 0x0D
     int 0x10
-    jmp shell_loop
+    
+    jmp $
 
 
 ; int 0x21
@@ -156,7 +103,7 @@ general_err:
 ;        	       2 - de
 ;           al - file type
 ;           bx - file size in bytes
-; destruct: es=0, ds=0, si, di
+; destruct: es=0, ds=0, si, di, dx
 int_get_file_text:
     int 0x23
     test ah, ah
@@ -200,7 +147,6 @@ int_get_file_text:
 ;                0 - ok
 ;                1 - fnf
 ;                2 - de
-;           al - file type
 ; destruct: es=0, ds=0, ax, cx, bx, si, di
 int_set_file_text:
     push cx
@@ -238,20 +184,19 @@ int_set_file_text:
 .need_alloc:
     push dx
     push bx
-        mov [di + 14], bx
-        mov cx, [0x600]
-        mov [di + 12], cx
-        add [0x600], bx
+        push cx
+            mov cx, [0x600]
+            mov [di + 12], cx
+        pop cx
+        add [0x600], cx
 
         mov ax, 0x0301
         mov cx, 0x0002
-        mov dx, 0x0080
+        mov dl, [0x602]
         mov bx, 0x0600
         int 0x13
 
-        mov ax, 0x0301
         mov cx, 0x0003
-        mov dx, 0x0080
         mov bx, 0x0800
         int 0x13
     pop bx

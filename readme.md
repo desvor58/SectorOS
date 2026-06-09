@@ -45,7 +45,9 @@ sector 0:
 
 sector 1:
   struct SFSDiskData {
-    u16 last_free_sector;
+    u16  last_free_sector;      // number of last free sector on disk
+    u16  reserved_for_disk_id;  // reserved will be using by SOS
+    char start_prog[11];        // null-padded name of program with start first by SOS itself
   };
 
 sector 2:
@@ -78,6 +80,7 @@ sector 3-...:
        ^
        | SectorOS/PLS stack
     0x20000
-      PLS         executable programs loads hear
+      SPL         start program loads here
     0x30000
+      PLS         executable programs loads here
 ```

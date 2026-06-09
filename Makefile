@@ -8,7 +8,8 @@ PROGRAMS := hello     \
 			reboot    \
 			touch	  \
 			wrt	      \
-			del 	  
+			del 	  \
+			sterm	  
 
 BINS := $(addsuffix .bin, $(PROGRAMS))
 
@@ -24,7 +25,7 @@ sos.bin: sos.asm
 	nasm -f bin -o sos.bin sos.asm
 
 $(BINS): %.bin: programs/%.asm
-	nasm -f bin -o $@ $<
+	nasm -f bin -o bin/$@ $<
 
 disk: sos.bin $(BINS)
 	python3 mkfs.py disk_example.sfsd disk.img
@@ -35,4 +36,6 @@ run: all
 .PHONY: clear
 clear:
 	$(CLEAN_CMD) *.img
+	cd bin
 	$(CLEAN_CMD) *.bin
+	cd ..
