@@ -19,12 +19,14 @@ else
     CLEAN_CMD := rm -f
 endif
 
+.PHONY: clear init
+
 all: disk
 
 sos.bin: sos.asm
 	nasm -f bin -o sos.bin sos.asm
 
-$(BINS): %.bin: programs/%.asm
+$(BINS): %.bin: programs/%.asm init
 	nasm -f bin -o bin/$@ $<
 
 disk: sos.bin $(BINS)
@@ -32,10 +34,12 @@ disk: sos.bin $(BINS)
 
 run: all
 	qemu-system-x86_64 -drive format=raw,file=disk.img
-
-.PHONY: clear
+	
 clear:
-	$(CLEAN_CMD) *.img
-	cd bin
-	$(CLEAN_CMD) *.bin
-	cd ..
+	-$(CLEAN_CMD) *.img
+	-cd bin
+	-$(CLEAN_CMD) *.bin
+	-cd ..
+
+init:
+	-mkdir bin

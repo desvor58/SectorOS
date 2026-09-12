@@ -244,20 +244,28 @@ int_get_file_header:
     cmp byte [es:di], 0
     jz .err_fnf
 
-    push si
-    push di
-        mov cx, 11
-        repe cmpsb
-    pop di
-    pop si
-    jz .search_done
+    xor bx, bx
+.name_cmp_loop:
+    cmp bx, 11
+    jz .check_slash
 
+    mov al, [si + bx]
+    test al, al
+    jz .search_done
+.check_slash:
+    cmp al, '/'
+    jz .to_subdir
+    cmp al, [es:di + bx]
+    jnz .next_header
+    
+    inc bx
+    jmp .name_cmp_loop
+
+.next_header:
     add di, 0x10
     jmp .search_loop
 
 .search_done:
-    cmp byte [si], '/'
-    jz .to_subdir
 
 .ok_end:
     xor ah, ah
@@ -267,10 +275,13 @@ int_get_file_header:
     cmp byte [di + 11], 'D'
     jnz .err_ind
 
+    add si, bx
+
     push si
         mov si, DAP_struct
         mov byte [si + 2], 1
-        mov word [si + 4], 0x800
+        mov word [si + 4], 0x0800
+        mov word [si + 6], 0x0000
         mov ax, [di + 12]
         mov [si + 8], ax
         mov ah, 0x42

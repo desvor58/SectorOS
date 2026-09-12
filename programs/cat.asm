@@ -38,12 +38,6 @@ file_cpy_done:
     mov ax, ds
     mov es, ax
     mov si, file
-    mov di, full_path
-    call path_to_sfs_path
-
-    mov si, full_path
-    call print
-    retf
 
     mov dx, 0x4000
     push ds
