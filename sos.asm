@@ -277,22 +277,31 @@ int_get_file_header:
 
     add si, bx
 
+    push ds
     push si
-        mov si, DAP_struct
-        mov byte [si + 2], 1
-        mov word [si + 4], 0x0800
-        mov word [si + 6], 0x0000
-        mov ax, [di + 12]
-        mov [si + 8], ax
-        mov ah, 0x42
-        mov dl, [0x6FE]
-        int 0x13
-        jc .err_de
+    xor ax, ax
+    mov ds, ax
+    mov si, DAP_struct
+    mov byte [si + 2], 1
+    mov word [si + 4], 0x0800
+    mov word [si + 6], 0x0000
+    mov ax, [di + 12]
+    mov [si + 8], ax
+    mov ah, 0x42
+    mov dl, [0x6FE]
+    int 0x13
+    jc .de_fail
     pop si
+    pop ds
 
     inc si
     int 0x23
     iret
+
+.de_fail:
+    pop si
+    pop ds
+    jmp .err_de
     
 .err_fnf:
     mov ah, 1
