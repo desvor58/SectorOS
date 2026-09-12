@@ -49,9 +49,9 @@ start:
     int 0x13
     jc err_de
 
-    mov [0x602], dl
+    mov [0x6FE], dl
 
-    mov si, 0x604
+    mov si, 0x602
     mov dx, 0x2000
     int 0x21
 
@@ -101,6 +101,7 @@ general_err:
 ;                0 - ok
 ;        	       1 - fnf
 ;        	       2 - de
+;                  3 - ind
 ;           al - file type
 ;           bx - file size in bytes
 ; destruct: es=0, ds=0, si, di, dx
@@ -124,7 +125,7 @@ int_get_file_text:
     mov word [DAP_struct.buf_ptr + 2], dx
 
     mov ah, 0x42
-    mov dl, [0x602]
+    mov dl, [0x6FE]
     mov si, DAP_struct
     int 0x13
     jc .err_de
@@ -185,14 +186,14 @@ int_set_file_text:
     push dx
     push bx
         push cx
-            mov cx, [0x600]
+            mov cx, [0x6FE]
             mov [di + 12], cx
         pop cx
-        add [0x600], cx
+        add [0x6FE], cx
 
         mov ax, 0x0301
         mov cx, 0x0002
-        mov dl, [0x602]
+        mov dl, [0x6FE]
         mov bx, 0x0600
         int 0x13
 
@@ -212,7 +213,7 @@ int_set_file_text:
     mov word [DAP_struct.buf_ptr + 2], dx
     
     mov ax, 0x4300
-    mov dl, [0x602]
+    mov dl, [0x6FE]
     mov si, DAP_struct
     int 0x13
     jc .err_de
@@ -230,8 +231,10 @@ int_set_file_text:
 ; out:      ah - err code
 ;                0 - ok
 ;                1 - fnf
+;                2 - de
+;                3 - ind
 ;           es:di - file struct
-; destruct: es, ax, bx, cx, si, di
+; destruct: es, ax, bx, cx, si, di, dx
 int_get_file_header:
     xor ax, ax
     mov es, ax
@@ -253,13 +256,44 @@ int_get_file_header:
     jmp .search_loop
 
 .search_done:
+    cmp byte [si], '/'
+    jz .to_subdir
+
+.ok_end:
     xor ah, ah
+    iret
+
+.to_subdir:
+    cmp byte [di + 11], 'D'
+    jnz .err_ind
+
+    push si
+        mov si, DAP_struct
+        mov byte [si + 2], 1
+        mov word [si + 4], 0x800
+        mov ax, [di + 12]
+        mov [si + 8], ax
+        mov ah, 0x42
+        mov dl, [0x6FE]
+        int 0x13
+        jc .err_de
+    pop si
+
+    inc si
+    int 0x23
     iret
     
 .err_fnf:
     mov ah, 1
     iret
 
+.err_de:
+    mov ah, 2
+    iret
+
+.err_ind:
+    mov ah, 3
+    iret
 
 align 4
 DAP_struct:

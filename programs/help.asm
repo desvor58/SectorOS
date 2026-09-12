@@ -18,19 +18,5 @@ help db "shutdown - shuting down the pc", 10, 13
      db "rdsd <sec> - prints disk <sec> data", 10, 13
      db 0
 
-print:
-    mov cx, 1
-.put:
-    lodsb
-    test al, al
-    jz .done
-    cmp al, 0x20
-    jl .ctrlC
-    mov ah, 0x09
-    int 0x10
-.ctrlC:
-    mov ah, 0x0E
-    int 0x10
-    jmp .put
-.done:
-    ret
+%include "./programs/inc/sstd.inc"
+USE_PRINT

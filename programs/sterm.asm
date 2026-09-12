@@ -6,7 +6,15 @@ shell_loop:
     push ds
     push es
 
-    mov di, comm
+    xor ax, ax
+    mov es, ax
+    mov di, 0x500
+
+    mov cx, 0x100
+    push di
+        rep stosb
+    pop di
+
     xor cx, cx
 
 .read_char:
@@ -51,21 +59,18 @@ shell_loop:
     mov al, 0x0D
     int 0x10
 
-    push es
-        xor ax, ax
-        mov es, ax
-        mov di, 0x500
-        mov si, comm
-        mov cx, 128
-        rep movsb
+    push ds
     pop es
+    xor ax, ax
+    mov ds, ax
 
-    mov si, comm
+    mov si, 0x500
     mov di, prog
     mov cx, 11
 .get_prog_loop:
-    lodsb
+    jcxz .get_prog_done
 
+    lodsb
     cmp al, ' '
     jbe .get_prog_done
 
@@ -77,13 +82,18 @@ shell_loop:
     xor ax, ax
     rep stosb
 
+    push es
+    pop ds
+
     mov si, prog
     mov dx, 0x3000
     int 0x21
 
     cmp ah, 1
     jz err_fnf
-    ja err_de
+    cmp ah, 2
+    jz err_de
+    ja err_ind
     cmp al, 'E'
     jnz err_wft
 
@@ -93,8 +103,6 @@ shell_loop:
     call 0x3000:0x0000
 
     jmp goto_shell_loop
-    retf
-
 
 err_fnf:
     mov si, err_fnf_text
@@ -102,6 +110,10 @@ err_fnf:
 
 err_de:
     mov si, err_de_text
+    jmp general_err
+
+err_ind:
+    mov si, err_ind_text
     jmp general_err
 
 err_wft:
@@ -116,27 +128,12 @@ goto_shell_loop:
     pop ds
     jmp shell_loop
 
-
-print:
-    mov cx, 1
-.put:
-    lodsb
-    test al, al
-    jz .done
-    cmp al, 0x20
-    jl .ctrlC
-    mov ah, 0x09
-    int 0x10
-.ctrlC:
-    mov ah, 0x0E
-    int 0x10
-    jmp .put
-.done:
-    ret
-
-comm resb 128
 prog resb 11
 
 err_fnf_text db "File not found", 10, 13, 0
 err_de_text db "Disk error", 10, 13, 0
 err_wft_text db "Wrong file type", 10, 13, 0
+err_ind_text db "Its not dir", 10, 13, 0
+
+%include "./programs/inc/sstd.inc"
+USE_PRINT

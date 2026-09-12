@@ -92,42 +92,10 @@ done:
     mov al, 0x0D
     int 0x10
 	retf
-    
-print:
-    mov cx, 1
-.put:
-    lodsb
-    test al, al
-    jz .done
-    cmp al, 0x20
-    jl .ctrlC
-    mov ah, 0x09
-    int 0x10
-.ctrlC:
-    mov ah, 0x0E
-    int 0x10
-    jmp .put
-.done:
-    ret
 
-print_ax_dec:
-    push dx
-    mov bx, 10
-    xor cx, cx
-.gc:
-    xor dx, dx
-    div bx
-    push dx
-    inc cx
-    test ax, ax
-    jnz .gc
-.put:
-    pop ax
-    add al, '0'
-    mov ah, 0x0E
-    int 0x10
-    loop .put
-    pop dx
-    ret
 
 header db "NAME.......T..SZ...SC", 13, 10, 0
+
+%include "./programs/inc/sstd.inc"
+USE_PRINT
+USE_PRINT_AX_DEC

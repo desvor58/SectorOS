@@ -35,10 +35,16 @@ file_cpy:
     jmp file_cpy
 
 file_cpy_done:
-    mov cx, 11
-    rep stosb
-
+    mov ax, ds
+    mov es, ax
     mov si, file
+    mov di, full_path
+    call path_to_sfs_path
+
+    mov si, full_path
+    call print
+    retf
+
     mov dx, 0x4000
     push ds
         int 0x21
@@ -79,23 +85,11 @@ err_de:
     call print
     retf
 
-print:
-    mov cx, 1
-.put:
-    lodsb
-    test al, al
-    jz .done
-    cmp al, 0x20
-    jl .ctrlC
-    mov ah, 0x09
-    int 0x10
-.ctrlC:
-    mov ah, 0x0E
-    int 0x10
-    jmp .put
-.done:
-    ret
-
 file times 32 db 0
+full_path times 48 db 0
 err_fnf_text db "File not found", 10, 13, 0
 err_de_text db "Disk error", 10, 13, 0
+
+%include "./programs/inc/sstd.inc"
+USE_PRINT
+USE_PATH_TO_SFS_PATH

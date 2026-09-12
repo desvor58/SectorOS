@@ -66,6 +66,17 @@
 			"type": "F",
 			"name": "test.txt",
 			"data": "test.txt"
+		},
+		{
+			"type": "D",
+			"name": "testdir",
+			"data": [
+				{
+					"type": "F",
+					"name": "test.txt",
+					"data": "test.txt"
+				}
+			]
 		}
 	]
 }

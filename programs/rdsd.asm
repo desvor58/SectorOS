@@ -115,61 +115,6 @@ err_de:
     retf
     
 
-; ax - num
-print_ax_hex:
-    push bp
-    mov bp, sp
-    pusha
-
-    sub sp, 6
-    mov di, sp
-
-    mov cx, 4
-    mov bx, ax
-.loop:
-    rol bx, 4
-    mov al, bl
-    and al, 0Fh
-    add al, '0'
-    cmp al, '9'
-    jbe .store
-    add al, 7
-
-.store:
-    mov [di], al
-    inc di
-    loop .loop
-
-    mov byte [di], 0
-
-    mov si, sp
-    mov bx, 0x0F
-    call print
-    add sp, 6
-    popa
-    pop bp
-    ret
-
-print:
-    mov cx, 1
-
-.put:
-    lodsb
-    test al, al
-    jz .done
-    cmp al, 0x20
-    jl .ctrlC
-    mov ah, 0x09
-    int 0x10
-
-.ctrlC:
-    mov ah, 0x0E
-    int 0x10
-    jmp .put
-
-.done:
-    ret
-
 ; ds:si - str
 num_to_ax:
     xor ax, ax
@@ -198,3 +143,7 @@ err_fnf_text db "File not found", 10, 13, 0
 err_de_text db "Disk error", 10, 13, 0
 
 sector times 512 db 0
+
+%include "./programs/inc/sstd.inc"
+USE_PRINT
+USE_PRINT_AX_HEX
