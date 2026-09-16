@@ -5,6 +5,36 @@ sterm:
 shell_loop:
     push ds
     push es
+    
+    mov si, DAP_struct
+    mov ah, 0x42
+    mov dl, 0x80
+    int 0x13
+    jc err_de
+
+    mov ah, 0x03
+    xor bh, bh
+    int 0x10
+    test dl, dl
+    ja .skip_new_line
+    xor dl, dl
+    mov ah, 0x02
+    int 0x10
+
+.skip_new_line:
+    push ds
+        xor ax, ax
+        mov ds, ax
+
+        mov si, 0x60D
+        mov bx, 0x0F
+        call print
+    pop ds
+
+    mov al, '/'
+    mov ah, 0x0E
+    mov bx, 0x0F
+    int 0x10
 
     xor ax, ax
     mov es, ax
@@ -128,7 +158,20 @@ goto_shell_loop:
     pop ds
     jmp shell_loop
 
+
+parse_path:
+    ret
+
 prog resb 11
+
+align 4
+DAP_struct:
+    .DAP_size db 0x10
+    .res      db 0x00
+    .sec_num  dw 1       ; + 2
+    .buf_ptr  dw 0x0800  ; + 4
+              dw 0x0000  ; + 6
+    .sec_ptr  dq 2       ; + 8
 
 err_fnf_text db "File not found", 10, 13, 0
 err_de_text db "Disk error", 10, 13, 0

@@ -97,7 +97,7 @@ print_loop:
     jz .put_nl
     loop print_loop
 
-.put_nl
+.put_nl:
     ; mov ah, 0x0E
     ; mov al, 0x0A
     ; int 0x10

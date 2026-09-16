@@ -9,6 +9,7 @@ PROGRAMS := hello     \
 			touch	  \
 			wrt	      \
 			del 	  \
+			cd        \
 			sterm	  
 
 BINS := $(addsuffix .bin, $(PROGRAMS))
@@ -33,9 +34,12 @@ disk: sos.bin $(BINS)
 	python3 mkfs.py disk_example.sfsd disk.img
 
 run: all
-	qemu-system-x86_64 -drive format=raw,file=disk.img
+	qemu-system-i386 -drive format=raw,file=disk.img
+
+dbg: all
+	qemu-system-i386 -drive format=raw,file=disk.img -monitor stdio
 	
-clear:
+clean:
 	-$(CLEAN_CMD) *.img
 	-cd bin
 	-$(CLEAN_CMD) *.bin

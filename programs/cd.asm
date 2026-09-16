@@ -3,72 +3,50 @@
 
 start:
     xor ax, ax
-    mov es, ax
+    mov ds, ax
     mov si, 0x500
 
 skip_pn_loop:
-    mov al, [es:si]
+    lodsb
     cmp al, ' '
     jz to_args_loop
-    inc si
     jmp skip_pn_loop
 
 to_args_loop:
-    mov al, [es:si]
+    lodsb
     cmp al, ' '
     jnz args_done
-    inc si
     jmp to_args_loop
 
 args_done:
-    mov di, file
-    xor cx, cx
-file_cpy:
-    mov al, [es:si]
+    mov di, dir
+    dec si
+arg_cpy:
+    lodsb
     test al, al
-    jz file_cpy_done
+    jz arg_cpy_done
     cmp al, ' '
-    jz file_cpy_done
-    mov [di], al
-    inc di
-    inc si
-    jmp file_cpy
+    jz arg_cpy_done
+    stosb
+    jmp arg_cpy
 
-file_cpy_done:
-    mov ax, ds
-    mov es, ax
-    mov si, file
-
-    mov dx, 0x4000
-    push ds
-        int 0x21
-    pop ds
-    cmp ah, 1
+arg_cpy_done:
+    mov ax, es
+    mov ds, ax
+    mov si, dir
+    int 0x23
+    cmp al, 1
     jz err_fnf
-    cmp ah, 2
+    cmp al, 2
     jz err_de
     ja err_ind
 
-    mov cx, bx
-
-    mov ax, 0x4000
+    xor ax, ax
     mov es, ax
-    mov si, 0
-    mov ah, 0x0E
-
-    mov bx, 0x0F
-    
-print_loop:
-    mov al, [es:si]
-    int 0x10
-    inc si
-    loop print_loop
-
-print_done:
-    mov al, 0x0A
-    int 0x10
-    mov al, 0x0D
-    int 0x10
+    mov di, 0x60D
+    mov si, dir
+    mov cx, 60
+    rep movsb
     retf
 
 err_fnf:
@@ -89,8 +67,8 @@ err_ind:
     call print
     retf
 
-file times 32 db 0
-full_path times 48 db 0
+dir resb 60
+
 err_fnf_text db "File not found", 10, 13, 0
 err_de_text db "Disk error", 10, 13, 0
 err_ind_text db "Header not a directory", 10, 13, 0

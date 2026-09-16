@@ -47,6 +47,7 @@ sector 1:
   struct SFSDiskData {
     u16  last_free_sector;      // number of last free sector on disk
     char start_prog[11];        // null-padded name of program with start first by SOS itself
+    char curend_dir_path[60];   // not used by SOS? but reserved for terminals (sterm for example). null-terminated
   };
 
 sector 2:

@@ -106,32 +106,34 @@ general_err:
 ;           bx - file size in bytes
 ; destruct: es=0, ds=0, si, di, dx
 int_get_file_text:
+    push dx
     int 0x23
+    pop dx
     test ah, ah
     jnz .err
 
     xor ax, ax
     mov ds, ax
 
-    mov ax, [di + 12]
-    mov [DAP_struct.sec_ptr], ax
-    mov ax, [di + 14]
+    mov si, DAP_struct
+    mov ax, [es:di + 12]
+    mov [si + 8], ax
+    mov ax, [es:di + 14]
     add ax, 0x1FF
     mov cl, 0x09
     shr ax, cl
-    mov [DAP_struct.sec_num], ax
+    mov [si + 2], ax
 
-    mov word [DAP_struct.buf_ptr], 0
-    mov word [DAP_struct.buf_ptr + 2], dx
+    mov word [si + 4], 0
+    mov word [si + 6], dx
 
     mov ah, 0x42
     mov dl, [0x6FE]
-    mov si, DAP_struct
     int 0x13
     jc .err_de
 
-    mov al, [di + 11]
-    mov bx, [di + 14]
+    mov al, [es:di + 11]
+    mov bx, [es:di + 14]
     xor ah, ah
     iret
 
@@ -205,16 +207,16 @@ int_set_file_text:
     jc .err_de
 
 .write:
+    mov si, DAP_struct
     mov ax, [di + 12]
-    mov [DAP_struct.sec_ptr], ax
-    mov [DAP_struct.sec_num], bx
+    mov [si + 8], ax
+    mov [si + 2], bx
 
-    mov word [DAP_struct.buf_ptr], 0
-    mov word [DAP_struct.buf_ptr + 2], dx
+    mov word [si + 4], 0
+    mov word [si + 6], dx
     
     mov ax, 0x4300
     mov dl, [0x6FE]
-    mov si, DAP_struct
     int 0x13
     jc .err_de
 
@@ -266,36 +268,36 @@ int_get_file_header:
     jmp .search_loop
 
 .search_done:
-
 .ok_end:
     xor ah, ah
     iret
 
 .to_subdir:
-    cmp byte [di + 11], 'D'
+    cmp byte [es:di + 11], 'D'
     jnz .err_ind
 
     add si, bx
 
     push ds
     push si
-    xor ax, ax
-    mov ds, ax
-    mov si, DAP_struct
-    mov byte [si + 2], 1
-    mov word [si + 4], 0x0800
-    mov word [si + 6], 0x0000
-    mov ax, [di + 12]
-    mov [si + 8], ax
-    mov ah, 0x42
-    mov dl, [0x6FE]
-    int 0x13
-    jc .de_fail
+        xor ax, ax
+        mov ds, ax
+        mov si, DAP_struct
+        mov byte [si + 2], 1
+        mov word [si + 4], 0x0800
+        mov word [si + 6], 0x0000
+        mov ax, [di + 12]
+        mov [si + 8], ax
+        mov ah, 0x42
+        mov dl, [0x6FE]
+        int 0x13
+        jc .de_fail
     pop si
     pop ds
 
     inc si
     int 0x23
+
     iret
 
 .de_fail:
@@ -319,10 +321,10 @@ align 4
 DAP_struct:
     .DAP_size db 0x10
     .res      db 0x00
-    .sec_num  dw 1
-    .buf_ptr  dw 0x0800
-              dw 0x0000
-    .sec_ptr  dq 2
+    .sec_num  dw 1       ; + 2
+    .buf_ptr  dw 0x0800  ; + 4
+              dw 0x0000  ; + 6
+    .sec_ptr  dq 2       ; + 8
     
 int_table dw int_get_file_text
           dw int_set_file_text
