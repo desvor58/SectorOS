@@ -6,10 +6,32 @@ start:
     mov bx, 0x07
     call print
 
-    mov bx, 0x0F
+    xor ax, ax
+    mov ds, ax
+    mov si, 0x60D
+
+    cmp byte [si], 0
+    jz .root
+
+    mov dx, 0x4000
+    int 0x21
+    test ah, ah
+    jnz err_fnf
+    cmp al, 'D'
+    jnz err_ind
+
+    mov ax, 0x4000
+    mov ds, ax
+    xor si, si
+    jmp .list
+
+.root:
     mov si, 0x0800
     xor ax, ax
     mov ds, ax
+
+.list:
+    mov bx, 0x0F
 
     xor dx, dx
 
@@ -93,8 +115,22 @@ done:
     int 0x10
 	retf
 
+err_fnf:
+    mov si, err_fnf_text
+    mov bx, 0x04
+    call print
+    retf
+
+err_ind:
+    mov si, err_ind_text
+    mov bx, 0x04
+    call print
+    retf
+
 
 header db "NAME.......T..SZ...SC", 13, 10, 0
+err_fnf_text db "File not found", 10, 13, 0
+err_ind_text db "Its not dir", 10, 13, 0
 
 %include "./programs/inc/sstd.inc"
 USE_PRINT

@@ -1,7 +1,6 @@
 {
 	"boot": "sos.bin",
 	"start_prog": "sterm",
-	"size": "32K",
 	"data": [
 		{
 			"type": "E",
@@ -80,6 +79,17 @@
 				{
 					"type": "F",
 					"name": "tind",
+					"data": "test.txt"
+				}
+			]
+		},
+		{
+			"type": "D",
+			"name": "usr_dir",
+			"data": [
+				{
+					"type": "F",
+					"name": "my_file",
 					"data": "test.txt"
 				}
 			]

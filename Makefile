@@ -37,7 +37,10 @@ run: all
 	qemu-system-i386 -drive format=raw,file=disk.img
 
 dbg: all
-	qemu-system-i386 -drive format=raw,file=disk.img -monitor stdio
+	qemu-system-i386 -drive format=raw,file=disk.img -s -S
+
+gdb:
+	gdb --ex "set architecture i8086" --ex "target remote localhost:1234"
 	
 clean:
 	-$(CLEAN_CMD) *.img

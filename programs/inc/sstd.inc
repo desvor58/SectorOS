@@ -1,6 +1,28 @@
 %ifndef SSTD
 %define SSTD
 
+; %macro pusha 0
+;     push ax
+;     push cx
+;     push dx
+;     push bx
+;     push sp
+;     push bp
+;     push si
+;     push di
+; %endmacro
+
+; %macro popa 0
+;     pop di
+;     pop si
+;     pop bp
+;     pop bx  ; ignore the sp
+;     pop bx
+;     pop dx
+;     pop cx
+;     pop ax
+; %endmacro
+
 %macro USE_PRINT 0
     ; in: si - string
     print:
@@ -11,9 +33,6 @@
         test al, al
         jz .done
         cmp al, 0x20
-        jl .ctrlC
-        mov ah, 0x09
-        int 0x10
     .ctrlC:
         mov ah, 0x0E
         int 0x10

@@ -3,6 +3,7 @@
 
 sterm:
 shell_loop:
+    mov [sterm_seg], ds
     push ds
     push es
     
@@ -31,16 +32,17 @@ shell_loop:
         call print
     pop ds
 
-    mov al, '/'
+    mov al, '$'
     mov ah, 0x0E
     mov bx, 0x0F
     int 0x10
+    mov al, ' '
+    int 0x10
 
-    xor ax, ax
-    mov es, ax
-    mov di, 0x500
+    mov es, [sterm_seg]
+    mov di, user_raw_input
 
-    mov cx, 0x100
+    mov cx, 75
     push di
         rep stosb
     pop di
@@ -56,6 +58,9 @@ shell_loop:
 
     cmp al, 0x08
     jz .backspace
+
+    cmp cx, 74
+    jae .read_char
 
     stosb
     mov ah, 0x0E
@@ -82,15 +87,21 @@ shell_loop:
     jmp .read_char
 
 .done:
-    mov byte [di], 0
+    mov byte [es:di], 0
     
     mov ax, 0x0E0A
     int 0x10
     mov al, 0x0D
     int 0x10
 
-    push ds
-    pop es
+    mov ds, [sterm_seg]
+    mov si, user_raw_input
+    xor ax, ax
+    mov es, ax
+    mov di, 0x500
+    call parse_path
+
+    mov es, [sterm_seg]
     xor ax, ax
     mov ds, ax
 
@@ -158,11 +169,48 @@ goto_shell_loop:
     pop ds
     jmp shell_loop
 
-
+; in:  ds:si - input str
+;      es:di - output buf
 parse_path:
+    pusha
+
+.read_loop:
+    lodsb
+    test al, al
+    jz .done
+    cmp al, '~'
+    jz .put_wd
+    stosb
+    jmp .read_loop
+
+.done:
+    xor al, al
+    stosb
+    popa
     ret
 
+.put_wd:
+    push ds
+    push si
+        xor ax, ax
+        mov ds, ax
+        mov si, 0x60D
+.put_wd_loop:
+        lodsb
+        test al, al
+        jz .put_wd_done
+        stosb
+        jmp .put_wd_loop
+.put_wd_done:
+    pop si
+    pop ds
+    jmp .read_loop
+
 prog resb 11
+
+sterm_seg dw 0
+
+user_raw_input resb 75
 
 align 4
 DAP_struct:
