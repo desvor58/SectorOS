@@ -249,7 +249,7 @@ int_get_file_header:
     xor bx, bx
 .name_cmp_loop:
     cmp bx, 11
-    jz .check_slash
+    ja .check_slash
 
     mov al, [si + bx]
     test al, al

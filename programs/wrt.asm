@@ -46,7 +46,7 @@ skip_spaces:
 
 skip_spaces_done:
     push ds
-    mov ax, 0x3000
+    mov ax, 0x4000
     mov ds, ax
     xor di, di
     xor cx, cx
@@ -66,7 +66,7 @@ text_cpy_done:
     pop ds
 
     mov si, file
-    mov dx, 0x3000
+    mov dx, 0x4000
     int 0x22
     cmp ah, 1
     jz err_fnf
@@ -88,8 +88,6 @@ err_de:
 file times 32 db 0
 err_fnf_text db "File not found", 10, 13, 0
 err_de_text db "Disk error", 10, 13, 0
-
-FHT_sector times 512 db 0
 
 %include "./programs/inc/sstd.inc"
 USE_PRINT
