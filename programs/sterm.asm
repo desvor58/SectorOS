@@ -13,6 +13,14 @@ shell_loop:
     int 0x13
     jc err_de
 
+    push ds
+        push 0
+        pop ds
+
+        mov ax, [0x6FD]
+        mov [0x6FE], ax
+    pop ds
+
     mov ah, 0x03
     xor bh, bh
     int 0x10

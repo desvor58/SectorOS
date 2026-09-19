@@ -8,6 +8,8 @@ start:
 
 skip_pn_loop:
     lodsb
+    test al, al
+    jz cd_root
     cmp al, ' '
     jz to_args_loop
     jmp skip_pn_loop
@@ -65,6 +67,14 @@ err_ind:
     mov si, err_ind_text
     mov bx, 0x04
     call print
+    retf
+
+cd_root:
+    xor ax, ax
+    mov cx, 60
+    mov es, ax
+    mov di, 0x60D
+    rep stosb
     retf
 
 dir resb 60

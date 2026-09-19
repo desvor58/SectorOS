@@ -53,7 +53,7 @@ sector 1:
 sector 2:
   struct FileHeader {
     char     file_name[11];	   // null-padded name
-    uint8_t  file_type;        // E - executable, F - text file, D - directory
+    uint8_t  file_type;        // E - executable, F - text file, D - directory, M - mount point
     uint16_t data_start_sec;   // number of file sector
     uint16_t data_size; 	     // size of text
   } FileHeadersTable[];
@@ -61,6 +61,12 @@ sector 2:
 sector 3-...:
   files data...
 ```
+
+## Directory
+If file_type == D then data_start_sec point to sector of diractory FHT
+
+## Mount points
+If file_type == M then ((u8[2])data_start_sec)[0] contains number of disk
 
 # Memory map
 ```

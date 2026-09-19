@@ -9,16 +9,13 @@ start:
         mov ax, 0x1000
         mov ss, ax
         mov sp, 0xFFFE
-        
-        mov di, 0x21 * 4
-        mov si, int_table
-        mov cx, 3
-    .set_ivt:
-        lodsw
-        stosw
-        mov ax, cs
-        stosw
-        loop .set_ivt
+
+        mov word [0x21 * 4], int_get_file_text
+        mov word [0x21 * 4 + 2], cs
+        mov word [0x22 * 4], int_set_file_text
+        mov word [0x22 * 4 + 2], cs
+        mov word [0x23 * 4], int_get_file_header
+        mov word [0x23 * 4 + 2], cs
     sti
     push dx
 
@@ -40,8 +37,8 @@ start:
     int 0x13
     jc err_de
 
-    mov word [DAP_struct.sec_ptr], 1
-    mov word [DAP_struct.buf_ptr], 0x0600
+    mov word [si + 8], 1
+    mov word [si + 4], 0x0600
 
     ; load SFSDD
     mov ah, 0x42
@@ -50,6 +47,7 @@ start:
     jc err_de
 
     mov [0x6FE], dl
+    mov [0x6FD], dl
 
     mov si, 0x602
     mov dx, 0x2000
@@ -112,16 +110,15 @@ int_get_file_text:
     test ah, ah
     jnz .err
 
-    xor ax, ax
-    mov ds, ax
+    push 0
+    pop ds
 
     mov si, DAP_struct
-    mov ax, [es:di + 12]
+    mov ax, [di + 12]
     mov [si + 8], ax
-    mov ax, [es:di + 14]
+    mov ax, [di + 14]
     add ax, 0x1FF
-    mov cl, 0x09
-    shr ax, cl
+    shr ax, 0x09
     mov [si + 2], ax
 
     mov word [si + 4], 0
@@ -132,8 +129,8 @@ int_get_file_text:
     int 0x13
     jc .err_de
 
-    mov al, [es:di + 11]
-    mov bx, [es:di + 14]
+    mov al, [di + 11]
+    mov bx, [di + 14]
     xor ah, ah
     iret
 
@@ -158,26 +155,22 @@ int_set_file_text:
     test ah, ah
     jnz .err
 
-    xor ax, ax
-    mov ds, ax
+    push 0
+    pop ds
 
     mov bx, [di + 14]
     add bx, 0x1FF
-    push cx
-        mov cl, 9
-        shr bx, cl
-    pop cx
+    shr bx, 0x09
 
     test bx, bx
     jnz .bx_not_null
     inc bx
-.bx_not_null:
 
+.bx_not_null:
     mov [di + 14], cx
 
     add cx, 0x1FF
-    mov cl, 9
-    shr cx, cl
+    shr cx, 0x09
 
     cmp cx, bx
     ja .need_alloc
@@ -238,8 +231,8 @@ int_set_file_text:
 ;           es:di - file struct
 ; destruct: es, ax, bx, cx, si, di, dx
 int_get_file_header:
-    xor ax, ax
-    mov es, ax
+    push 0
+    pop es
     mov di, 0x0800
 
 .search_loop:
@@ -273,20 +266,26 @@ int_get_file_header:
     iret
 
 .to_subdir:
+    add si, bx
+
+    cmp byte [es:di + 11], 'M'
+    jz .dir_is_mount_point
+
     cmp byte [es:di + 11], 'D'
     jnz .err_ind
 
-    add si, bx
+    mov ax, [di + 12]
 
+.load_fht:
     push ds
     push si
-        xor ax, ax
-        mov ds, ax
+        push 0
+        pop ds
+        
         mov si, DAP_struct
         mov byte [si + 2], 1
         mov word [si + 4], 0x0800
         mov word [si + 6], 0x0000
-        mov ax, [di + 12]
         mov [si + 8], ax
         mov ah, 0x42
         mov dl, [0x6FE]
@@ -299,6 +298,12 @@ int_get_file_header:
     int 0x23
 
     iret
+
+.dir_is_mount_point:
+    mov al, [es:di + 12]
+    mov [0x6FE], al
+    mov ax, 2
+    jmp .load_fht
 
 .de_fail:
     pop si
@@ -325,10 +330,6 @@ DAP_struct:
     .buf_ptr  dw 0x0800  ; + 4
               dw 0x0000  ; + 6
     .sec_ptr  dq 2       ; + 8
-    
-int_table dw int_get_file_text
-          dw int_set_file_text
-          dw int_get_file_header
 
 times 510 - ($ - $$) db 0
 dw 0xAA55

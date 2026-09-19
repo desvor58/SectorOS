@@ -17,6 +17,8 @@ help db "shutdown - shuting down the pc", 10, 13
      db "wrt <file> [<text>] - write <text> to file", 10, 13
      db "cat <file> - prints <file> text", 10, 13
      db "rdsd <sec> - prints disk <sec> data", 10, 13
+     db "mount <dir> <0xNN> - mount disk <0xNN> to <dir>", 10, 13
+     db "mount - list present disks, mounted and not", 10, 13
      db 0
 
 %include "./programs/inc/sstd.inc"

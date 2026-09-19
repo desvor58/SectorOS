@@ -68,6 +68,11 @@
 			"data": "bin/rdsd.bin"
 		},
 		{
+			"type": "E",
+			"name": "mount",
+			"data": "bin/mount.bin"
+		},
+		{
 			"type": "F",
 			"name": "test.txt",
 			"data": "test.txt"
